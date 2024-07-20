@@ -7,6 +7,7 @@ userRouter.use(authMiddleware);
 
 // User API
 userRouter.get('/api/users/current', userController.get);
+userRouter.patch('/api/users/current', userController.update);
 
 export {
     userRouter
