@@ -93,3 +93,13 @@ export const createTestAddress = async () => {
         }
     })
 }
+
+export const getTestAddress = async () => {
+    return prismaClient.address.findFirst({
+        where: {
+            contact: {
+                username: "dhani"
+            }
+        }
+    })
+}
