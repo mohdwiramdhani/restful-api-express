@@ -89,3 +89,68 @@ describe('GET /api/contacts/:contactId', function () {
     //     expect(result.status).toBe(404);
     // });
 });
+
+describe('PUT /api/contacts/:contactId', function () {
+    beforeEach(async () => {
+        await createTestUser();
+        await createTestContact();
+    })
+
+    afterEach(async () => {
+        await removeAllTestContacts();
+        await removeTestUser();
+    })
+
+    it('should can update existing contact', async () => {
+        const testContact = await getTestContact();
+
+        const result = await supertest(web)
+            .put('/api/contacts/' + testContact.id)
+            .set('Authorization', 'test')
+            .send({
+                first_name: "Dwi",
+                last_name: "Ramdhani",
+                email: "dwiramdhani@gmail.com",
+                phone: "085200000000"
+            });
+
+        expect(result.status).toBe(200);
+        expect(result.body.data.id).toBe(testContact.id);
+        expect(result.body.data.first_name).toBe("Dwi");
+        expect(result.body.data.last_name).toBe("Ramdhani");
+        expect(result.body.data.email).toBe("dwiramdhani@gmail.com");
+        expect(result.body.data.phone).toBe("085200000000");
+    });
+
+    it('should reject if request is invalid', async () => {
+        const testContact = await getTestContact();
+
+        const result = await supertest(web)
+            .put('/api/contacts/' + testContact.id)
+            .set('Authorization', 'test')
+            .send({
+                first_name: "",
+                last_name: "",
+                email: "mail",
+                phone: ""
+            });
+
+        expect(result.status).toBe(400);
+    });
+
+    // it('should reject if contact is not found', async () => {
+    //     const testContact = await getTestContact();
+
+    //     const result = await supertest(web)
+    //         .put('/api/contacts/' + (testContact.id + 1))
+    //         .set('Authorization', 'test')
+    //         .send({
+    //             first_name: "Dwi",
+    //             last_name: "Ramdhani",
+    //             email: "dwiramdhani@gmail.com",
+    //             phone: "085200000000"
+    //         });
+
+    //     expect(result.status).toBe(404);
+    // });
+});
