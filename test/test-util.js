@@ -1,5 +1,12 @@
 import { prismaClient } from "../src/application/database.js";
 import bcrypt from "bcrypt";
+import jwt from 'jsonwebtoken';
+
+const JWT_SECRET_KEY = 'secret_key';
+
+export const verifyTestToken = (token) => {
+    return jwt.verify(token, JWT_SECRET_KEY);
+};
 
 export const removeTestUser = async () => {
     await prismaClient.user.deleteMany({
@@ -14,8 +21,7 @@ export const createTestUser = async () => {
         data: {
             username: "dhani",
             password: await bcrypt.hash("pw", 10),
-            name: "dhani",
-            token: "test"
+            name: "dhani"
         }
     })
 }
