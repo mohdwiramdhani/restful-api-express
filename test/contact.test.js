@@ -1,7 +1,7 @@
 import {
-    createTestUser,
-    createTestContact,
     createManyTestContacts,
+    createTestContact,
+    createTestUser,
     getTestContact,
     removeAllTestContacts,
     removeTestUser
@@ -9,7 +9,6 @@ import {
 import supertest from "supertest";
 import { web } from "../src/application/web.js";
 import { logger } from "../src/application/logging.js";
-
 
 describe('POST /api/contacts', function () {
     beforeEach(async () => {
@@ -71,7 +70,7 @@ describe('GET /api/contacts/:contactId', function () {
         const testContact = await getTestContact();
 
         const result = await supertest(web)
-            .get("/api/contacts/" + testContact.id)
+            .get("/api/contacts/" + (testContact.id))
             .set('Authorization', 'test');
 
         expect(result.status).toBe(200);
@@ -82,15 +81,26 @@ describe('GET /api/contacts/:contactId', function () {
         expect(result.body.data.phone).toBe(testContact.phone);
     });
 
-    // it('should return 404 if contact id is not found', async () => {
-    //     const testContact = await getTestContact();
+    it('should return 404 if contact id is not found', async () => {
+        const testContact = await getTestContact();
 
-    //     const result = await supertest(web)
-    //         .get("/api/contacts/" + (testContact.id + 1))
-    //         .set('Authorization', 'test');
+        const result = await supertest(web)
+            .get("/api/contacts/" + (testContact.id + 1))
+            .set('Authorization', 'test');
 
-    //     expect(result.status).toBe(404);
-    // });
+        expect(result.status).toBe(404);
+    });
+
+    it('should reject if authentication is invalid', async () => {
+        const testContact = await getTestContact();
+
+        const result = await supertest(web)
+            .get('/api/contacts/' + testContact.id)
+            .set('Authorization', 'invalid_token');
+
+        expect(result.status).toBe(401);
+        expect(result.body.errors).toBeDefined();
+    });
 });
 
 describe('PUT /api/contacts/:contactId', function () {
