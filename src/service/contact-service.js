@@ -1,8 +1,11 @@
-import { validate } from "../validation/validation.js";
+import {validate} from "../validation/validation.js";
 import {
-    createContactValidation, getContactValidation, updateContactValidation, searchContactValidation
+    createContactValidation,
+    getContactValidation, searchContactValidation,
+    updateContactValidation
 } from "../validation/contact-validation.js";
-import { prismaClient } from "../application/database.js";
+import {prismaClient} from "../application/database.js";
+import {ResponseError} from "../error/response-error.js";
 
 const create = async (user, request) => {
     const contact = validate(createContactValidation, request);
