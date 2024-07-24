@@ -4,7 +4,8 @@ import {
     createTestUser,
     getTestContact,
     removeAllTestContacts,
-    removeTestUser
+    removeTestUser,
+    verifyTestToken
 } from "./test-util.js";
 import supertest from "supertest";
 import { web } from "../src/application/web.js";
@@ -21,9 +22,18 @@ describe('POST /api/contacts', function () {
     })
 
     it('should can create new contact', async () => {
+        const loginResult = await supertest(web)
+            .post('/api/users/login')
+            .send({
+                username: "dhani",
+                password: "pw"
+            });
+
+        const token = loginResult.body.data.token;
+
         const result = await supertest(web)
             .post("/api/contacts")
-            .set('Authorization', 'test')
+            .set("Authorization", `Bearer ${token}`)
             .send({
                 first_name: "Rama",
                 last_name: "Dhani",
@@ -40,9 +50,18 @@ describe('POST /api/contacts', function () {
     });
 
     it('should reject if request is not valid', async () => {
+        const loginResult = await supertest(web)
+            .post('/api/users/login')
+            .send({
+                username: "dhani",
+                password: "pw"
+            });
+
+        const token = loginResult.body.data.token;
+
         const result = await supertest(web)
             .post("/api/contacts")
-            .set('Authorization', 'test')
+            .set("Authorization", `Bearer ${token}`)
             .send({
                 first_name: "",
                 last_name: "Dhani",
@@ -67,11 +86,20 @@ describe('GET /api/contacts/:contactId', function () {
     })
 
     it('should can get contact', async () => {
+        const loginResult = await supertest(web)
+            .post('/api/users/login')
+            .send({
+                username: "dhani",
+                password: "pw"
+            });
+
+        const token = loginResult.body.data.token;
+
         const testContact = await getTestContact();
 
         const result = await supertest(web)
             .get("/api/contacts/" + (testContact.id))
-            .set('Authorization', 'test');
+            .set("Authorization", `Bearer ${token}`);
 
         expect(result.status).toBe(200);
         expect(result.body.data.id).toBe(testContact.id);
@@ -82,24 +110,22 @@ describe('GET /api/contacts/:contactId', function () {
     });
 
     it('should return 404 if contact id is not found', async () => {
+        const loginResult = await supertest(web)
+            .post('/api/users/login')
+            .send({
+                username: "dhani",
+                password: "pw"
+            });
+
+        const token = loginResult.body.data.token;
+
         const testContact = await getTestContact();
 
         const result = await supertest(web)
             .get("/api/contacts/" + (testContact.id + 1))
-            .set('Authorization', 'test');
+            .set("Authorization", `Bearer ${token}`);
 
         expect(result.status).toBe(404);
-    });
-
-    it('should reject if authentication is invalid', async () => {
-        const testContact = await getTestContact();
-
-        const result = await supertest(web)
-            .get('/api/contacts/' + testContact.id)
-            .set('Authorization', 'invalid_token');
-
-        expect(result.status).toBe(401);
-        expect(result.body.errors).toBeDefined();
     });
 });
 
@@ -115,11 +141,20 @@ describe('PUT /api/contacts/:contactId', function () {
     })
 
     it('should can update existing contact', async () => {
+        const loginResult = await supertest(web)
+            .post('/api/users/login')
+            .send({
+                username: "dhani",
+                password: "pw"
+            });
+
+        const token = loginResult.body.data.token;
+
         const testContact = await getTestContact();
 
         const result = await supertest(web)
             .put('/api/contacts/' + testContact.id)
-            .set('Authorization', 'test')
+            .set("Authorization", `Bearer ${token}`)
             .send({
                 first_name: "Dwi",
                 last_name: "Ramdhani",
@@ -136,11 +171,20 @@ describe('PUT /api/contacts/:contactId', function () {
     });
 
     it('should reject if request is invalid', async () => {
+        const loginResult = await supertest(web)
+            .post('/api/users/login')
+            .send({
+                username: "dhani",
+                password: "pw"
+            });
+
+        const token = loginResult.body.data.token;
+
         const testContact = await getTestContact();
 
         const result = await supertest(web)
             .put('/api/contacts/' + testContact.id)
-            .set('Authorization', 'test')
+            .set("Authorization", `Bearer ${token}`)
             .send({
                 first_name: "",
                 last_name: "",
@@ -151,21 +195,30 @@ describe('PUT /api/contacts/:contactId', function () {
         expect(result.status).toBe(400);
     });
 
-    // it('should reject if contact is not found', async () => {
-    //     const testContact = await getTestContact();
+    it('should reject if contact is not found', async () => {
+        const loginResult = await supertest(web)
+            .post('/api/users/login')
+            .send({
+                username: "dhani",
+                password: "pw"
+            });
 
-    //     const result = await supertest(web)
-    //         .put('/api/contacts/' + (testContact.id + 1))
-    //         .set('Authorization', 'test')
-    //         .send({
-    //             first_name: "Dwi",
-    //             last_name: "Ramdhani",
-    //             email: "dwiramdhani@gmail.com",
-    //             phone: "085200000000"
-    //         });
+        const token = loginResult.body.data.token;
 
-    //     expect(result.status).toBe(404);
-    // });
+        const testContact = await getTestContact();
+
+        const result = await supertest(web)
+            .put('/api/contacts/' + (testContact.id + 1))
+            .set("Authorization", `Bearer ${token}`)
+            .send({
+                first_name: "Dwi",
+                last_name: "Ramdhani",
+                email: "dwiramdhani@gmail.com",
+                phone: "085200000000"
+            });
+
+        expect(result.status).toBe(404);
+    });
 });
 
 describe('DELETE /api/contacts/:contactId', function () {
@@ -180,10 +233,19 @@ describe('DELETE /api/contacts/:contactId', function () {
     })
 
     it('should can delete contact', async () => {
+        const loginResult = await supertest(web)
+            .post('/api/users/login')
+            .send({
+                username: "dhani",
+                password: "pw"
+            });
+
+        const token = loginResult.body.data.token;
+
         let testContact = await getTestContact();
         const result = await supertest(web)
             .delete('/api/contacts/' + testContact.id)
-            .set('Authorization', 'test');
+            .set("Authorization", `Bearer ${token}`);
 
         expect(result.status).toBe(200);
         expect(result.body.data).toBe("OK");
@@ -192,14 +254,23 @@ describe('DELETE /api/contacts/:contactId', function () {
         expect(testContact).toBeNull();
     });
 
-    // it('should reject if contact is not found', async () => {
-    //     let testContact = await getTestContact();
-    //     const result = await supertest(web)
-    //         .delete('/api/contacts/' + (testContact.id + 1))
-    //         .set('Authorization', 'test');
+    it('should reject if contact is not found', async () => {
+        const loginResult = await supertest(web)
+            .post('/api/users/login')
+            .send({
+                username: "dhani",
+                password: "pw"
+            });
 
-    //     expect(result.status).toBe(404);
-    // });
+        const token = loginResult.body.data.token;
+
+        let testContact = await getTestContact();
+        const result = await supertest(web)
+            .delete('/api/contacts/' + (testContact.id + 1))
+            .set("Authorization", `Bearer ${token}`);
+
+        expect(result.status).toBe(404);
+    });
 });
 
 describe('GET /api/contacts', function () {
@@ -214,9 +285,18 @@ describe('GET /api/contacts', function () {
     })
 
     it('should can search without parameter', async () => {
+        const loginResult = await supertest(web)
+            .post('/api/users/login')
+            .send({
+                username: "dhani",
+                password: "pw"
+            });
+
+        const token = loginResult.body.data.token;
+
         const result = await supertest(web)
             .get('/api/contacts')
-            .set('Authorization', 'test');
+            .set("Authorization", `Bearer ${token}`);
 
         expect(result.status).toBe(200);
         expect(result.body.data.length).toBe(10);
@@ -226,12 +306,21 @@ describe('GET /api/contacts', function () {
     });
 
     it('should can search to page 2', async () => {
+        const loginResult = await supertest(web)
+            .post('/api/users/login')
+            .send({
+                username: "dhani",
+                password: "pw"
+            });
+
+        const token = loginResult.body.data.token;
+
         const result = await supertest(web)
             .get('/api/contacts')
             .query({
                 page: 2
             })
-            .set('Authorization', 'test');
+            .set("Authorization", `Bearer ${token}`);
 
         logger.info(result.body);
 
@@ -243,12 +332,21 @@ describe('GET /api/contacts', function () {
     });
 
     it('should can search using name', async () => {
+        const loginResult = await supertest(web)
+            .post('/api/users/login')
+            .send({
+                username: "dhani",
+                password: "pw"
+            });
+
+        const token = loginResult.body.data.token;
+
         const result = await supertest(web)
             .get('/api/contacts')
             .query({
                 name: "Dhani 1"
             })
-            .set('Authorization', 'test');
+            .set("Authorization", `Bearer ${token}`);
 
         logger.info(result.body);
 
@@ -260,12 +358,21 @@ describe('GET /api/contacts', function () {
     });
 
     it('should can search using email', async () => {
+        const loginResult = await supertest(web)
+            .post('/api/users/login')
+            .send({
+                username: "dhani",
+                password: "pw"
+            });
+
+        const token = loginResult.body.data.token;
+
         const result = await supertest(web)
             .get('/api/contacts')
             .query({
                 email: "mohdwiramdhani1"
             })
-            .set('Authorization', 'test');
+            .set("Authorization", `Bearer ${token}`);
 
         logger.info(result.body);
 
@@ -277,12 +384,21 @@ describe('GET /api/contacts', function () {
     });
 
     it('should can search using phone', async () => {
+        const loginResult = await supertest(web)
+            .post('/api/users/login')
+            .send({
+                username: "dhani",
+                password: "pw"
+            });
+
+        const token = loginResult.body.data.token;
+
         const result = await supertest(web)
             .get('/api/contacts')
             .query({
                 phone: "08229606481"
             })
-            .set('Authorization', 'test');
+            .set("Authorization", `Bearer ${token}`);
 
         logger.info(result.body);
 
