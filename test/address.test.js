@@ -1,10 +1,8 @@
 import {
-    createTestAddress,
-    createTestContact,
-    createTestUser, getTestAddress, getTestContact,
-    removeAllTestAddresses,
-    removeAllTestContacts,
-    removeTestUser
+    createTestAddress, createTestContact, createTestUser,
+    getTestAddress, getTestContact,
+    removeAllTestAddresses, removeAllTestContacts, removeTestUser,
+    verifyTestToken
 } from "./test-util.js";
 import supertest from "supertest";
 import { web } from "../src/application/web.js";
@@ -22,11 +20,20 @@ describe('POST /api/contacts/:contactId/addresses', function () {
     })
 
     it('should can create new address', async () => {
+        const loginResult = await supertest(web)
+            .post('/api/users/login')
+            .send({
+                username: "dhani",
+                password: "pw"
+            });
+
+        const token = loginResult.body.data.token;
+
         const testContact = await getTestContact();
 
         const result = await supertest(web)
             .post('/api/contacts/' + testContact.id + '/addresses')
-            .set('Authorization', 'test')
+            .set('Authorization', token)
             .send({
                 street: "jalan test",
                 city: 'kota test',
@@ -45,11 +52,20 @@ describe('POST /api/contacts/:contactId/addresses', function () {
     });
 
     it('should reject if address request is invalid', async () => {
+        const loginResult = await supertest(web)
+            .post('/api/users/login')
+            .send({
+                username: "dhani",
+                password: "pw"
+            });
+
+        const token = loginResult.body.data.token;
+
         const testContact = await getTestContact();
 
         const result = await supertest(web)
             .post('/api/contacts/' + testContact.id + '/addresses')
-            .set('Authorization', 'test')
+            .set('Authorization', token)
             .send({
                 street: "jalan test",
                 city: 'kota test',
@@ -62,11 +78,20 @@ describe('POST /api/contacts/:contactId/addresses', function () {
     });
 
     it('should reject if contact is not found', async () => {
+        const loginResult = await supertest(web)
+            .post('/api/users/login')
+            .send({
+                username: "dhani",
+                password: "pw"
+            });
+
+        const token = loginResult.body.data.token;
+
         const testContact = await getTestContact();
 
         const result = await supertest(web)
             .post('/api/contacts/' + (testContact.id + 1) + '/addresses')
-            .set('Authorization', 'test')
+            .set('Authorization', token)
             .send({
                 street: "jalan test",
                 city: 'kota test',
@@ -93,12 +118,21 @@ describe('GET /api/contacts/:contactId/addresses/:addressId', function () {
     })
 
     it('should can get contact', async () => {
+        const loginResult = await supertest(web)
+            .post('/api/users/login')
+            .send({
+                username: "dhani",
+                password: "pw"
+            });
+
+        const token = loginResult.body.data.token;
+
         const testContact = await getTestContact();
         const testAddress = await getTestAddress();
 
         const result = await supertest(web)
             .get('/api/contacts/' + testContact.id + '/addresses/' + testAddress.id)
-            .set('Authorization', 'test');
+            .set("Authorization", `Bearer ${token}`)
 
         expect(result.status).toBe(200);
         expect(result.body.data.id).toBeDefined();
@@ -110,23 +144,41 @@ describe('GET /api/contacts/:contactId/addresses/:addressId', function () {
     });
 
     it('should reject if contact is not found', async () => {
+        const loginResult = await supertest(web)
+            .post('/api/users/login')
+            .send({
+                username: "dhani",
+                password: "pw"
+            });
+
+        const token = loginResult.body.data.token;
+
         const testContact = await getTestContact();
         const testAddress = await getTestAddress();
 
         const result = await supertest(web)
             .get('/api/contacts/' + (testContact.id + 1) + '/addresses/' + testAddress.id)
-            .set('Authorization', 'test');
+            .set("Authorization", `Bearer ${token}`)
 
         expect(result.status).toBe(404);
     });
 
     it('should reject if address is not found', async () => {
+        const loginResult = await supertest(web)
+            .post('/api/users/login')
+            .send({
+                username: "dhani",
+                password: "pw"
+            });
+
+        const token = loginResult.body.data.token;
+
         const testContact = await getTestContact();
         const testAddress = await getTestAddress();
 
         const result = await supertest(web)
             .get('/api/contacts/' + testContact.id + '/addresses/' + (testAddress.id + 1))
-            .set('Authorization', 'test');
+            .set("Authorization", `Bearer ${token}`)
 
         expect(result.status).toBe(404);
     });
@@ -146,12 +198,21 @@ describe('PUT /api/contacts/:contactId/addresses/:addressId', function () {
     })
 
     it('should can update address', async () => {
+        const loginResult = await supertest(web)
+            .post('/api/users/login')
+            .send({
+                username: "dhani",
+                password: "pw"
+            });
+
+        const token = loginResult.body.data.token;
+
         const testContact = await getTestContact();
         const testAddress = await getTestAddress();
 
         const result = await supertest(web)
             .put('/api/contacts/' + testContact.id + '/addresses/' + testAddress.id)
-            .set('Authorization', 'test')
+            .set('Authorization', token)
             .send({
                 street: "street",
                 city: 'city',
@@ -170,12 +231,21 @@ describe('PUT /api/contacts/:contactId/addresses/:addressId', function () {
     });
 
     it('should reject if request is not valid', async () => {
+        const loginResult = await supertest(web)
+            .post('/api/users/login')
+            .send({
+                username: "dhani",
+                password: "pw"
+            });
+
+        const token = loginResult.body.data.token;
+
         const testContact = await getTestContact();
         const testAddress = await getTestAddress();
 
         const result = await supertest(web)
             .put('/api/contacts/' + testContact.id + '/addresses/' + testAddress.id)
-            .set('Authorization', 'test')
+            .set('Authorization', token)
             .send({
                 street: "street",
                 city: 'city',
@@ -188,12 +258,21 @@ describe('PUT /api/contacts/:contactId/addresses/:addressId', function () {
     });
 
     it('should reject if address is not found', async () => {
+        const loginResult = await supertest(web)
+            .post('/api/users/login')
+            .send({
+                username: "dhani",
+                password: "pw"
+            });
+
+        const token = loginResult.body.data.token;
+
         const testContact = await getTestContact();
         const testAddress = await getTestAddress();
 
         const result = await supertest(web)
             .put('/api/contacts/' + testContact.id + '/addresses/' + (testAddress.id + 1))
-            .set('Authorization', 'test')
+            .set('Authorization', token)
             .send({
                 street: "street",
                 city: 'city',
@@ -206,12 +285,21 @@ describe('PUT /api/contacts/:contactId/addresses/:addressId', function () {
     });
 
     it('should reject if contact is not found', async () => {
+        const loginResult = await supertest(web)
+            .post('/api/users/login')
+            .send({
+                username: "dhani",
+                password: "pw"
+            });
+
+        const token = loginResult.body.data.token;
+
         const testContact = await getTestContact();
         const testAddress = await getTestAddress();
 
         const result = await supertest(web)
             .put('/api/contacts/' + (testContact.id + 1) + '/addresses/' + testAddress.id)
-            .set('Authorization', 'test')
+            .set('Authorization', token)
             .send({
                 street: "street",
                 city: 'city',
@@ -238,12 +326,21 @@ describe('DELETE /api/contacts/:contactId/addresses/:addressId', function () {
     })
 
     it('should can remove address', async () => {
+        const loginResult = await supertest(web)
+            .post('/api/users/login')
+            .send({
+                username: "dhani",
+                password: "pw"
+            });
+
+        const token = loginResult.body.data.token;
+
         const testContact = await getTestContact();
         let testAddress = await getTestAddress();
 
         const result = await supertest(web)
             .delete('/api/contacts/' + testContact.id + '/addresses/' + testAddress.id)
-            .set('Authorization', 'test');
+            .set("Authorization", `Bearer ${token}`)
 
         expect(result.status).toBe(200);
         expect(result.body.data).toBe("OK");
@@ -253,23 +350,41 @@ describe('DELETE /api/contacts/:contactId/addresses/:addressId', function () {
     });
 
     it('should reject if address is not found', async () => {
+        const loginResult = await supertest(web)
+            .post('/api/users/login')
+            .send({
+                username: "dhani",
+                password: "pw"
+            });
+
+        const token = loginResult.body.data.token;
+
         const testContact = await getTestContact();
         let testAddress = await getTestAddress();
 
         const result = await supertest(web)
             .delete('/api/contacts/' + testContact.id + '/addresses/' + (testAddress.id + 1))
-            .set('Authorization', 'test');
+            .set("Authorization", `Bearer ${token}`)
 
         expect(result.status).toBe(404);
     });
 
     it('should reject if contact is not found', async () => {
+        const loginResult = await supertest(web)
+            .post('/api/users/login')
+            .send({
+                username: "dhani",
+                password: "pw"
+            });
+
+        const token = loginResult.body.data.token;
+
         const testContact = await getTestContact();
         let testAddress = await getTestAddress();
 
         const result = await supertest(web)
             .delete('/api/contacts/' + (testContact.id + 1) + '/addresses/' + testAddress.id)
-            .set('Authorization', 'test');
+            .set("Authorization", `Bearer ${token}`)
 
         expect(result.status).toBe(404);
     });
@@ -289,22 +404,40 @@ describe('GET /api/contacts/:contactId/addresses', function () {
     })
 
     it('should can list addresses', async function () {
+        const loginResult = await supertest(web)
+            .post('/api/users/login')
+            .send({
+                username: "dhani",
+                password: "pw"
+            });
+
+        const token = loginResult.body.data.token;
+
         const testContact = await getTestContact();
 
         const result = await supertest(web)
             .get('/api/contacts/' + testContact.id + "/addresses")
-            .set('Authorization', 'test');
+            .set("Authorization", `Bearer ${token}`)
 
         expect(result.status).toBe(200);
         expect(result.body.data.length).toBe(1);
     });
 
     it('should reject if contact is not found', async function () {
+        const loginResult = await supertest(web)
+            .post('/api/users/login')
+            .send({
+                username: "dhani",
+                password: "pw"
+            });
+
+        const token = loginResult.body.data.token;
+
         const testContact = await getTestContact();
 
         const result = await supertest(web)
             .get('/api/contacts/' + (testContact.id + 1) + "/addresses")
-            .set('Authorization', 'test');
+            .set("Authorization", `Bearer ${token}`)
 
         expect(result.status).toBe(404);
     });
