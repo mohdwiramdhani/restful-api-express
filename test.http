@@ -3,9 +3,9 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "username" : "dhani",
-  "password" : "pw",
-  "name" : "Rama Dhani"
+  "username" : "pato",
+  "password" : "abc",
+  "name" : "Alex Pato"
 }
 
 ###
@@ -15,8 +15,8 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "username" : "dhani",
-  "password" : "pw"
+  "username" : "pato",
+  "password" : "abc"
 }
 
 ###
@@ -24,23 +24,115 @@ Accept: application/json
 GET http://localhost:3000/api/users/current
 Content-Type: application/json
 Accept: application/json
-Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImRoYW5pIiwiaWF0IjoxNzIxNzY1MTA3LCJleHAiOjE3MjE3ODMxMDd9.sVXZpWMBSez4c9qsURpbH-RRLW-gbgOKpEXhk-msCmE
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InBhdG8iLCJpYXQiOjE3MjE3ODIxNTYsImV4cCI6MTcyMTc4NTc1Nn0.jXICiF09W7r7tNSvTnM8hG8skcW9Ys5s-T3dWz4Gt6M
 
 ###
 
 PATCH http://localhost:3000/api/users/current
 Content-Type: application/json
 Accept: application/json
-Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImRoYW5pIiwiaWF0IjoxNzIxNzY1MTA3LCJleHAiOjE3MjE3ODMxMDd9.sVXZpWMBSez4c9qsURpbH-RRLW-gbgOKpEXhk-msCmE
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InBhdG8iLCJpYXQiOjE3MjE3ODIxNTYsImV4cCI6MTcyMTc4NTc1Nn0.jXICiF09W7r7tNSvTnM8hG8skcW9Ys5s-T3dWz4Gt6M
 
 {
-  "name" : "Moh Dwi Ramdhani"
+  "name" : "Alexandre Pato"
+}
+
+##################################################
+
+POST http://localhost:3000/api/contacts
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InBhdG8iLCJpYXQiOjE3MjE3ODIxNTYsImV4cCI6MTcyMTc4NTc1Nn0.jXICiF09W7r7tNSvTnM8hG8skcW9Ys5s-T3dWz4Gt6M
+
+{
+  "first_name" : "Alexandre",
+  "last_name" : "Pato",
+  "email" : "pato@gmail.com",
+  "phone" : "969696969696"
 }
 
 ###
 
-DELETE http://localhost:3000/api/users/logout
+GET http://localhost:3000/api/contacts
 Content-Type: application/json
 Accept: application/json
-Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImRoYW5pIiwiaWF0IjoxNzIxNzY1MTA3LCJleHAiOjE3MjE3ODMxMDd9.sVXZpWMBSez4c9qsURpbH-RRLW-gbgOKpEXhk-msCmE
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InBhdG8iLCJpYXQiOjE3MjE3ODIxNTYsImV4cCI6MTcyMTc4NTc1Nn0.jXICiF09W7r7tNSvTnM8hG8skcW9Ys5s-T3dWz4Gt6M
 
+###
+
+GET http://localhost:3000/api/contacts/813
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InBhdG8iLCJpYXQiOjE3MjE3ODIxNTYsImV4cCI6MTcyMTc4NTc1Nn0.jXICiF09W7r7tNSvTnM8hG8skcW9Ys5s-T3dWz4Gt6M
+
+### Update
+
+PUT http://localhost:3000/api/contacts/813
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InBhdG8iLCJpYXQiOjE3MjE3ODIxNTYsImV4cCI6MTcyMTc4NTc1Nn0.jXICiF09W7r7tNSvTnM8hG8skcW9Ys5s-T3dWz4Gt6M
+
+{
+  "first_name": "Rednaxela",
+  "last_name": "Otap",
+  "email": "otap@gmail.com",
+  "phone": "909090909090"
+}
+
+### Delete Contact
+
+DELETE http://localhost:3000/api/contacts/811
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InBhdG8iLCJpYXQiOjE3MjE3ODIxNTYsImV4cCI6MTcyMTc4NTc1Nn0.jXICiF09W7r7tNSvTnM8hG8skcW9Ys5s-T3dWz4Gt6M
+
+#######################################################
+
+POST http://localhost:3000/api/contacts/813/addresses
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InBhdG8iLCJpYXQiOjE3MjE3ODIxNTYsImV4cCI6MTcyMTc4NTc1Nn0.jXICiF09W7r7tNSvTnM8hG8skcW9Ys5s-T3dWz4Gt6M
+
+{
+  "street" : "Veteran",
+  "city" : "Palu",
+  "province" : "Sulawesi Tengah",
+  "country" : "Indonesia",
+  "postal_code" : "24514"
+}
+
+### List Addresses
+
+GET http://localhost:3000/api/contacts/813/addresses
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InBhdG8iLCJpYXQiOjE3MjE3ODIxNTYsImV4cCI6MTcyMTc4NTc1Nn0.jXICiF09W7r7tNSvTnM8hG8skcW9Ys5s-T3dWz4Gt6M
+
+### Get Address
+
+GET http://localhost:3000/api/contacts/813/addresses/47
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InBhdG8iLCJpYXQiOjE3MjE3ODIxNTYsImV4cCI6MTcyMTc4NTc1Nn0.jXICiF09W7r7tNSvTnM8hG8skcW9Ys5s-T3dWz4Gt6M
+
+### Update Address
+
+PUT http://localhost:3000/api/contacts/813/addresses/47
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InBhdG8iLCJpYXQiOjE3MjE3ODIxNTYsImV4cCI6MTcyMTc4NTc1Nn0.jXICiF09W7r7tNSvTnM8hG8skcW9Ys5s-T3dWz4Gt6M
+
+{
+  "street" : "Soeprapto",
+  "city" : "Palu",
+  "province" : "Sulawesi Tengah",
+  "country" : "Indonesia",
+  "postal_code" : "2414"
+}
+
+### Remove Address
+
+DELETE http://localhost:3000/api/contacts/813/addresses/47
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InBhdG8iLCJpYXQiOjE3MjE3ODIxNTYsImV4cCI6MTcyMTc4NTc1Nn0.jXICiF09W7r7tNSvTnM8hG8skcW9Ys5s-T3dWz4Gt6M
