@@ -8,7 +8,7 @@ import {
     verifyTestToken
 } from "./test-util.js";
 import supertest from "supertest";
-import { web } from "../src/application/web.js";
+import { app } from "../src/application/app.js";
 import { logger } from "../src/application/logging.js";
 
 describe('POST /api/contacts', function () {
@@ -22,7 +22,7 @@ describe('POST /api/contacts', function () {
     })
 
     it('should can create new contact', async () => {
-        const loginResult = await supertest(web)
+        const loginResult = await supertest(app)
             .post('/api/users/login')
             .send({
                 username: "dhani",
@@ -31,7 +31,7 @@ describe('POST /api/contacts', function () {
 
         const token = loginResult.body.data.token;
 
-        const result = await supertest(web)
+        const result = await supertest(app)
             .post("/api/contacts")
             .set("Authorization", `Bearer ${token}`)
             .send({
@@ -50,7 +50,7 @@ describe('POST /api/contacts', function () {
     });
 
     it('should reject if request is not valid', async () => {
-        const loginResult = await supertest(web)
+        const loginResult = await supertest(app)
             .post('/api/users/login')
             .send({
                 username: "dhani",
@@ -59,7 +59,7 @@ describe('POST /api/contacts', function () {
 
         const token = loginResult.body.data.token;
 
-        const result = await supertest(web)
+        const result = await supertest(app)
             .post("/api/contacts")
             .set("Authorization", `Bearer ${token}`)
             .send({
@@ -86,7 +86,7 @@ describe('GET /api/contacts/:contactId', function () {
     })
 
     it('should can get contact', async () => {
-        const loginResult = await supertest(web)
+        const loginResult = await supertest(app)
             .post('/api/users/login')
             .send({
                 username: "dhani",
@@ -97,7 +97,7 @@ describe('GET /api/contacts/:contactId', function () {
 
         const testContact = await getTestContact();
 
-        const result = await supertest(web)
+        const result = await supertest(app)
             .get("/api/contacts/" + (testContact.id))
             .set("Authorization", `Bearer ${token}`);
 
@@ -110,7 +110,7 @@ describe('GET /api/contacts/:contactId', function () {
     });
 
     it('should return 404 if contact id is not found', async () => {
-        const loginResult = await supertest(web)
+        const loginResult = await supertest(app)
             .post('/api/users/login')
             .send({
                 username: "dhani",
@@ -121,7 +121,7 @@ describe('GET /api/contacts/:contactId', function () {
 
         const testContact = await getTestContact();
 
-        const result = await supertest(web)
+        const result = await supertest(app)
             .get("/api/contacts/" + (testContact.id + 1))
             .set("Authorization", `Bearer ${token}`);
 
@@ -141,7 +141,7 @@ describe('PUT /api/contacts/:contactId', function () {
     })
 
     it('should can update existing contact', async () => {
-        const loginResult = await supertest(web)
+        const loginResult = await supertest(app)
             .post('/api/users/login')
             .send({
                 username: "dhani",
@@ -152,7 +152,7 @@ describe('PUT /api/contacts/:contactId', function () {
 
         const testContact = await getTestContact();
 
-        const result = await supertest(web)
+        const result = await supertest(app)
             .put('/api/contacts/' + testContact.id)
             .set("Authorization", `Bearer ${token}`)
             .send({
@@ -171,7 +171,7 @@ describe('PUT /api/contacts/:contactId', function () {
     });
 
     it('should reject if request is invalid', async () => {
-        const loginResult = await supertest(web)
+        const loginResult = await supertest(app)
             .post('/api/users/login')
             .send({
                 username: "dhani",
@@ -182,7 +182,7 @@ describe('PUT /api/contacts/:contactId', function () {
 
         const testContact = await getTestContact();
 
-        const result = await supertest(web)
+        const result = await supertest(app)
             .put('/api/contacts/' + testContact.id)
             .set("Authorization", `Bearer ${token}`)
             .send({
@@ -196,7 +196,7 @@ describe('PUT /api/contacts/:contactId', function () {
     });
 
     it('should reject if contact is not found', async () => {
-        const loginResult = await supertest(web)
+        const loginResult = await supertest(app)
             .post('/api/users/login')
             .send({
                 username: "dhani",
@@ -207,7 +207,7 @@ describe('PUT /api/contacts/:contactId', function () {
 
         const testContact = await getTestContact();
 
-        const result = await supertest(web)
+        const result = await supertest(app)
             .put('/api/contacts/' + (testContact.id + 1))
             .set("Authorization", `Bearer ${token}`)
             .send({
@@ -233,7 +233,7 @@ describe('DELETE /api/contacts/:contactId', function () {
     })
 
     it('should can delete contact', async () => {
-        const loginResult = await supertest(web)
+        const loginResult = await supertest(app)
             .post('/api/users/login')
             .send({
                 username: "dhani",
@@ -243,7 +243,7 @@ describe('DELETE /api/contacts/:contactId', function () {
         const token = loginResult.body.data.token;
 
         let testContact = await getTestContact();
-        const result = await supertest(web)
+        const result = await supertest(app)
             .delete('/api/contacts/' + testContact.id)
             .set("Authorization", `Bearer ${token}`);
 
@@ -255,7 +255,7 @@ describe('DELETE /api/contacts/:contactId', function () {
     });
 
     it('should reject if contact is not found', async () => {
-        const loginResult = await supertest(web)
+        const loginResult = await supertest(app)
             .post('/api/users/login')
             .send({
                 username: "dhani",
@@ -265,7 +265,7 @@ describe('DELETE /api/contacts/:contactId', function () {
         const token = loginResult.body.data.token;
 
         let testContact = await getTestContact();
-        const result = await supertest(web)
+        const result = await supertest(app)
             .delete('/api/contacts/' + (testContact.id + 1))
             .set("Authorization", `Bearer ${token}`);
 
@@ -285,7 +285,7 @@ describe('GET /api/contacts', function () {
     })
 
     it('should can search without parameter', async () => {
-        const loginResult = await supertest(web)
+        const loginResult = await supertest(app)
             .post('/api/users/login')
             .send({
                 username: "dhani",
@@ -294,7 +294,7 @@ describe('GET /api/contacts', function () {
 
         const token = loginResult.body.data.token;
 
-        const result = await supertest(web)
+        const result = await supertest(app)
             .get('/api/contacts')
             .set("Authorization", `Bearer ${token}`);
 
@@ -306,7 +306,7 @@ describe('GET /api/contacts', function () {
     });
 
     it('should can search to page 2', async () => {
-        const loginResult = await supertest(web)
+        const loginResult = await supertest(app)
             .post('/api/users/login')
             .send({
                 username: "dhani",
@@ -315,7 +315,7 @@ describe('GET /api/contacts', function () {
 
         const token = loginResult.body.data.token;
 
-        const result = await supertest(web)
+        const result = await supertest(app)
             .get('/api/contacts')
             .query({
                 page: 2
@@ -332,7 +332,7 @@ describe('GET /api/contacts', function () {
     });
 
     it('should can search using name', async () => {
-        const loginResult = await supertest(web)
+        const loginResult = await supertest(app)
             .post('/api/users/login')
             .send({
                 username: "dhani",
@@ -341,7 +341,7 @@ describe('GET /api/contacts', function () {
 
         const token = loginResult.body.data.token;
 
-        const result = await supertest(web)
+        const result = await supertest(app)
             .get('/api/contacts')
             .query({
                 name: "Dhani 1"
@@ -358,7 +358,7 @@ describe('GET /api/contacts', function () {
     });
 
     it('should can search using email', async () => {
-        const loginResult = await supertest(web)
+        const loginResult = await supertest(app)
             .post('/api/users/login')
             .send({
                 username: "dhani",
@@ -367,7 +367,7 @@ describe('GET /api/contacts', function () {
 
         const token = loginResult.body.data.token;
 
-        const result = await supertest(web)
+        const result = await supertest(app)
             .get('/api/contacts')
             .query({
                 email: "mohdwiramdhani1"
@@ -384,7 +384,7 @@ describe('GET /api/contacts', function () {
     });
 
     it('should can search using phone', async () => {
-        const loginResult = await supertest(web)
+        const loginResult = await supertest(app)
             .post('/api/users/login')
             .send({
                 username: "dhani",
@@ -393,7 +393,7 @@ describe('GET /api/contacts', function () {
 
         const token = loginResult.body.data.token;
 
-        const result = await supertest(web)
+        const result = await supertest(app)
             .get('/api/contacts')
             .query({
                 phone: "08229606481"

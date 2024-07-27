@@ -1,5 +1,5 @@
 import supertest from "supertest";
-import { web } from "../src/application/web.js";
+import { app } from "../src/application/app.js";
 import { logger } from "../src/application/logging.js";
 import { createTestUser, removeTestUser, getTestUser, verifyTestToken } from "./test-util.js";
 import bcrypt from "bcrypt";
@@ -11,7 +11,7 @@ describe('POST /api/users', function () {
     })
 
     it('should can register new user', async () => {
-        const result = await supertest(web)
+        const result = await supertest(app)
             .post('/api/users')
             .send({
                 username: 'dhani',
@@ -26,7 +26,7 @@ describe('POST /api/users', function () {
     });
 
     it('should reject if request is invalid', async () => {
-        const result = await supertest(web)
+        const result = await supertest(app)
             .post('/api/users')
             .send({
                 username: '',
@@ -41,7 +41,7 @@ describe('POST /api/users', function () {
     });
 
     it('should reject if username already registered', async () => {
-        let result = await supertest(web)
+        let result = await supertest(app)
             .post('/api/users')
             .send({
                 username: 'dhani',
@@ -56,7 +56,7 @@ describe('POST /api/users', function () {
         expect(result.body.data.name).toBe("dhani");
         expect(result.body.data.password).toBeUndefined();
 
-        result = await supertest(web)
+        result = await supertest(app)
             .post('/api/users')
             .send({
                 username: 'dhani',
@@ -81,7 +81,7 @@ describe('POST /api/users/login', function () {
     });
 
     it('should can login', async () => {
-        const result = await supertest(web)
+        const result = await supertest(app)
             .post('/api/users/login')
             .send({
                 username: "dhani",
@@ -98,7 +98,7 @@ describe('POST /api/users/login', function () {
     });
 
     it('should reject login if request is invalid', async () => {
-        const result = await supertest(web)
+        const result = await supertest(app)
             .post('/api/users/login')
             .send({
                 username: "",
@@ -112,7 +112,7 @@ describe('POST /api/users/login', function () {
     });
 
     it('should reject login if password is wrong', async () => {
-        const result = await supertest(web)
+        const result = await supertest(app)
             .post('/api/users/login')
             .send({
                 username: "dhani",
@@ -126,7 +126,7 @@ describe('POST /api/users/login', function () {
     });
 
     it('should reject login if username is wrong', async () => {
-        const result = await supertest(web)
+        const result = await supertest(app)
             .post('/api/users/login')
             .send({
                 username: "salah",
@@ -152,7 +152,7 @@ describe('GET /api/users/current', function () {
 
     it('should can get current user', async () => {
 
-        const loginResult = await supertest(web)
+        const loginResult = await supertest(app)
             .post('/api/users/login')
             .send({
                 username: "dhani",
@@ -161,9 +161,9 @@ describe('GET /api/users/current', function () {
 
         const token = loginResult.body.data.token;
 
-        const result = await supertest(web)
+        const result = await supertest(app)
             .get('/api/users/current')
-            .set('Authorization', token);
+            .set("Authorization", `Bearer ${token}`)
 
         expect(result.status).toBe(200);
         expect(result.body.data.username).toBe('dhani');
@@ -171,7 +171,7 @@ describe('GET /api/users/current', function () {
     });
 
     it('should reject if token is invalid', async () => {
-        const result = await supertest(web)
+        const result = await supertest(app)
             .get('/api/users/current')
             .set('Authorization', 'salah');
 
@@ -186,7 +186,7 @@ describe('PATCH /api/users/current', function () {
     beforeEach(async () => {
         await createTestUser();
 
-        const loginResult = await supertest(web)
+        const loginResult = await supertest(app)
             .post('/api/users/login')
             .send({
                 username: "dhani",
@@ -201,9 +201,9 @@ describe('PATCH /api/users/current', function () {
 
     it('should can update user all attributes', async () => {
 
-        const result = await supertest(web)
+        const result = await supertest(app)
             .patch("/api/users/current")
-            .set("Authorization", token)
+            .set("Authorization", `Bearer ${token}`)
             .send({
                 name: "rama",
                 password: "pwpw"
@@ -219,9 +219,9 @@ describe('PATCH /api/users/current', function () {
 
     it('should can update user name', async () => {
 
-        const result = await supertest(web)
+        const result = await supertest(app)
             .patch("/api/users/current")
-            .set("Authorization", token)
+            .set("Authorization", `Bearer ${token}`)
             .send({
                 name: "rama"
             });
@@ -232,9 +232,9 @@ describe('PATCH /api/users/current', function () {
     });
 
     it('should can update user password', async () => {
-        const result = await supertest(web)
+        const result = await supertest(app)
             .patch("/api/users/current")
-            .set("Authorization", token)
+            .set("Authorization", `Bearer ${token}`)
             .send({
                 password: "pwpw"
             });
@@ -248,7 +248,7 @@ describe('PATCH /api/users/current', function () {
     });
 
     it('should reject if request is not valid', async () => {
-        const result = await supertest(web)
+        const result = await supertest(app)
             .patch("/api/users/current")
             .set("Authorization", "salah")
             .send({});
