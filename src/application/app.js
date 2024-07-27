@@ -5,13 +5,13 @@ import { publicRouter } from "../route/public-api.js";
 import { errorMiddleware } from "../middleware/error-middleware.js";
 import { userRouter } from "../route/api.js";
 
-export const web = express();
+export const app = express();
 
-web.use(helmet());
-web.use(express.json());
-web.use(cors());
+app.use(helmet());
+app.use(express.json());
+app.use(cors());
 
-web.use(publicRouter);
-web.use(userRouter);
+app.use(publicRouter);
+app.use(userRouter);
 
-web.use(errorMiddleware);
+app.use(errorMiddleware);
