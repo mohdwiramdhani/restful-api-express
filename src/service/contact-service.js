@@ -23,7 +23,7 @@ const create = async (user, request) => {
             last_name: true,
             email: true,
             phone: true,
-            profile_picture: true // Pastikan properti ini ada di model Prisma
+            profile_picture: true
         }
     });
 }
@@ -41,7 +41,8 @@ const get = async (user, contactId) => {
             first_name: true,
             last_name: true,
             email: true,
-            phone: true
+            phone: true,
+            profile_picture: true
         }
     });
 
@@ -66,24 +67,31 @@ const update = async (user, request) => {
         throw new ResponseError(404, "contact is not found");
     }
 
+    const updateData = {
+        first_name: contact.first_name,
+        last_name: contact.last_name,
+        email: contact.email,
+        phone: contact.phone,
+    };
+
+    if (request.profile_picture) {
+        updateData.profile_picture = request.profile_picture;
+    }
+
     return prismaClient.contact.update({
         where: {
             id: contact.id
         },
-        data: {
-            first_name: contact.first_name,
-            last_name: contact.last_name,
-            email: contact.email,
-            phone: contact.phone,
-        },
+        data: updateData,
         select: {
             id: true,
             first_name: true,
             last_name: true,
             email: true,
-            phone: true
+            phone: true,
+            profile_picture: true
         }
-    })
+    });
 }
 
 const remove = async (user, contactId) => {

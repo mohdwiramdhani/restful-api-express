@@ -1,4 +1,5 @@
 import contactService from "../service/contact-service.js";
+import fs from "fs";
 
 const create = async (req, res, next) => {
     try {
@@ -24,10 +25,6 @@ const get = async (req, res, next) => {
         const contactId = req.params.contactId;
         const result = await contactService.get(user, contactId);
 
-        if (result.profile_picture) {
-            result.profile_picture = result.profile_picture.replace(/\\/g, '/');
-        }
-
         res.status(200).json({
             data: result
         })
@@ -43,14 +40,37 @@ const update = async (req, res, next) => {
         const request = req.body;
         request.id = contactId;
 
+        const oldContact = await contactService.get(user, contactId);
+
+        if (req.file) {
+            request.profile_picture = req.file.path.replace(/\\/g, '/');
+        }
+
         const result = await contactService.update(user, request);
+
+        if (req.file && oldContact.profile_picture) {
+            fs.unlink(oldContact.profile_picture, (err) => {
+                if (err) {
+                    console.error("Error deleting old profile picture:", err);
+                }
+            });
+        }
+
         res.status(200).json({
             data: result
-        })
+        });
     } catch (e) {
+        if (req.file) {
+            fs.unlink(req.file.path, (err) => {
+                if (err) {
+                    console.error("Error deleting uploaded file:", err);
+                }
+            });
+        }
         next(e);
     }
 }
+
 
 const remove = async (req, res, next) => {
     try {
