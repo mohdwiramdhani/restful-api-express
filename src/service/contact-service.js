@@ -1,15 +1,19 @@
-import {validate} from "../validation/validation.js";
+import { validate } from "../validation/validation.js";
 import {
     createContactValidation,
     getContactValidation, searchContactValidation,
     updateContactValidation
 } from "../validation/contact-validation.js";
-import {prismaClient} from "../application/database.js";
-import {ResponseError} from "../error/response-error.js";
+import { prismaClient } from "../application/database.js";
+import { ResponseError } from "../error/response-error.js";
 
 const create = async (user, request) => {
     const contact = validate(createContactValidation, request);
     contact.username = user.username;
+
+    if (request.profile_picture) {
+        contact.profile_picture = request.profile_picture;
+    }
 
     return prismaClient.contact.create({
         data: contact,
@@ -18,7 +22,8 @@ const create = async (user, request) => {
             first_name: true,
             last_name: true,
             email: true,
-            phone: true
+            phone: true,
+            profile_picture: true // Pastikan properti ini ada di model Prisma
         }
     });
 }
