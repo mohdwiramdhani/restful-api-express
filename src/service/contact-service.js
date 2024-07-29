@@ -7,12 +7,23 @@ import {
 import { prismaClient } from "../application/database.js";
 import { ResponseError } from "../error/response-error.js";
 
-const create = async (user, request) => {
+const create = async (user, request, files) => {
     const contact = validate(createContactValidation, request);
     contact.username = user.username;
 
-    if (request.profile_picture) {
-        contact.profile_picture = request.profile_picture;
+    if (files.length > 0) {
+        files.forEach(file => {
+            switch (file.fieldname) {
+                case 'profile_picture':
+                    contact.profile_picture = file.path.replace(/\\/g, '/');
+                    break;
+                case 'certificate':
+                    contact.certificate = file.path.replace(/\\/g, '/');
+                    break;
+                default:
+                    break;
+            }
+        });
     }
 
     return prismaClient.contact.create({
@@ -26,7 +37,7 @@ const create = async (user, request) => {
             profile_picture: true
         }
     });
-}
+};
 
 const get = async (user, contactId) => {
     contactId = validate(getContactValidation, contactId);
@@ -53,7 +64,7 @@ const get = async (user, contactId) => {
     return contact;
 }
 
-const update = async (user, request) => {
+const update = async (user, request, file) => {
     const contact = validate(updateContactValidation, request);
 
     const totalContactInDatabase = await prismaClient.contact.count({
@@ -67,6 +78,15 @@ const update = async (user, request) => {
         throw new ResponseError(404, "contact is not found");
     }
 
+    const oldContact = await prismaClient.contact.findFirst({
+        where: {
+            id: contact.id
+        },
+        select: {
+            profile_picture: true
+        }
+    });
+
     const updateData = {
         first_name: contact.first_name,
         last_name: contact.last_name,
@@ -78,7 +98,7 @@ const update = async (user, request) => {
         updateData.profile_picture = request.profile_picture;
     }
 
-    return prismaClient.contact.update({
+    const updatedContact = await prismaClient.contact.update({
         where: {
             id: contact.id
         },
@@ -92,6 +112,16 @@ const update = async (user, request) => {
             profile_picture: true
         }
     });
+
+    if (file && oldContact.profile_picture) {
+        fs.unlink(oldContact.profile_picture, (err) => {
+            if (err) {
+                console.error("Error deleting old profile picture:", err);
+            }
+        });
+    }
+
+    return updatedContact;
 }
 
 const remove = async (user, contactId) => {

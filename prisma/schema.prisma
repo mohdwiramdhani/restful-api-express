@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -29,6 +23,7 @@ model Contact {
   email           String?   @db.VarChar(200)
   phone           String?   @db.VarChar(20)
   profile_picture String?   @db.VarChar(255)
+  certificate     String?   @db.VarChar(255)
   username        String    @db.VarChar(100)
   user            User      @relation(fields: [username], references: [username])
   Address         Address[]
@@ -37,14 +32,15 @@ model Contact {
 }
 
 model Address {
-  id          Int     @id @default(autoincrement())
-  street      String? @db.VarChar(255)
-  city        String? @db.VarChar(100)
-  province    String? @db.VarChar(100)
-  country     String  @db.VarChar(100)
-  postal_code String  @db.VarChar(10)
-  contact_id  Int
-  contact     Contact @relation(fields: [contact_id], references: [id])
+  id               Int     @id @default(autoincrement())
+  street           String? @db.VarChar(255)
+  city             String? @db.VarChar(100)
+  province         String? @db.VarChar(100)
+  country          String  @db.VarChar(100)
+  postal_code      String  @db.VarChar(10)
+  location_picture String? @db.VarChar(255)
+  contact_id       Int
+  contact          Contact @relation(fields: [contact_id], references: [id])
 
   @@map("addresses")
 }

@@ -3,17 +3,30 @@ import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 
-// Fungsi untuk memastikan direktori ada
+// Function to ensure directory exists
 const ensureDirectoryExistence = (directory) => {
     if (!fs.existsSync(directory)) {
         fs.mkdirSync(directory, { recursive: true });
     }
 };
 
-// Konfigurasi untuk gambar profil
-const profileStorage = multer.diskStorage({
+// Function to create dynamic storage
+const createDynamicStorage = () => multer.diskStorage({
     destination: (req, file, cb) => {
-        const dest = 'public/images/profiles/';
+        let dest;
+        switch (file.fieldname) {
+            case 'profile_picture':
+                dest = 'public/images/profiles/';
+                break;
+            case 'certificate':
+                dest = 'public/files/certificates/';
+                break;
+            case 'location_picture':
+                dest = 'public/images/locations/';
+                break;
+            default:
+                dest = 'public/uploads/';
+        }
         ensureDirectoryExistence(dest);
         cb(null, dest);
     },
@@ -24,61 +37,29 @@ const profileStorage = multer.diskStorage({
     }
 });
 
-// Konfigurasi untuk gambar alamat
-const streetStorage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const dest = 'public/images/streets/';
-        ensureDirectoryExistence(dest);
-        cb(null, dest);
-    },
-    filename: (req, file, cb) => {
-        const extname = path.extname(file.originalname).toLowerCase();
-        const fileName = `${uuidv4()}${extname}`;
-        cb(null, fileName);
+// Function to create dynamic file filter
+const createDynamicFilter = () => (req, file, cb) => {
+    const fileTypes = {
+        'profile_picture': /jpeg|jpg|png/,
+        'certificate': /pdf/,
+        'location_picture': /jpeg|jpg|png/
+    };
+    const allowedTypes = fileTypes[file.fieldname];
+    if (allowedTypes) {
+        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+        const mimetype = allowedTypes.test(file.mimetype);
+        if (extname && mimetype) {
+            return cb(null, true);
+        }
     }
-});
-
-// Konfigurasi untuk file PDF
-const pdfStorage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const dest = 'public/files/';
-        ensureDirectoryExistence(dest);
-        cb(null, dest);
-    },
-    filename: (req, file, cb) => {
-        const extname = path.extname(file.originalname).toLowerCase();
-        const fileName = `${uuidv4()}${extname}`;
-        cb(null, fileName);
-    }
-});
-
-// Filter untuk gambar
-const imageFilter = (req, file, cb) => {
-    const fileTypes = /jpeg|jpg|png/;
-    const extname = fileTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = fileTypes.test(file.mimetype);
-
-    if (extname && mimetype) {
-        return cb(null, true);
-    } else {
-        cb(new Error('Error: Images Only!'));
-    }
+    cb(new Error('Error: File type not allowed!'));
 };
 
-// Filter untuk file PDF
-const pdfFilter = (req, file, cb) => {
-    const fileTypes = /pdf/;
-    const extname = fileTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = fileTypes.test(file.mimetype);
-
-    if (extname && mimetype) {
-        return cb(null, true);
-    } else {
-        cb(new Error('Error: PDFs Only!'));
+// Middleware setup
+export const uploadFile = multer({
+    storage: createDynamicStorage(),
+    fileFilter: createDynamicFilter(),
+    limits: {
+        fileSize: 1 * 1024 * 1024 // Default to 2 MB for all files
     }
-};
-
-// Middleware untuk upload file
-export const uploadProfile = multer({ storage: profileStorage, fileFilter: imageFilter, limits: { fileSize: 1 * 1024 * 1024 } });
-export const uploadStreet = multer({ storage: streetStorage, fileFilter: imageFilter, limits: { fileSize: 1 * 1024 * 1024 } });
-export const uploadPDF = multer({ storage: pdfStorage, fileFilter: pdfFilter, limits: { fileSize: 1 * 1024 * 1024 } });
+});
