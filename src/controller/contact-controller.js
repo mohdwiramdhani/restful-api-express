@@ -1,4 +1,5 @@
 import contactService from "../service/contact-service.js";
+import { logger } from "../application/logging.js";
 import fs from "fs";
 
 const create = async (req, res, next) => {
@@ -7,7 +8,7 @@ const create = async (req, res, next) => {
         const user = req.user;
         const request = req.body;
 
-        console.log('Files received:', files);
+        logger.info('Files received:', files);
 
         const result = await contactService.create(user, request, files);
 
@@ -17,7 +18,7 @@ const create = async (req, res, next) => {
         files.forEach(file => {
             fs.unlink(file.path, (err) => {
                 if (err) {
-                    console.error("Error deleting temp file:", err);
+                    logger.error("Error deleting temp file:", err);
                 }
             });
         });
@@ -47,7 +48,7 @@ const update = async (req, res, next) => {
         const request = req.body;
         request.id = contactId;
 
-        console.log('File received:', files);
+        logger.info('File received:', files);
 
         // Pass file if exists
         const result = await contactService.update(user, request, files);

@@ -6,6 +6,7 @@ import {
 } from "../validation/contact-validation.js";
 import { prismaClient } from "../application/database.js";
 import { ResponseError } from "../error/response-error.js";
+import { logger } from "../application/logging.js";
 import fs from "fs";
 import path from "path";
 
@@ -15,9 +16,8 @@ const ensureDirectoryExistence = (directory) => {
     }
 };
 
-
-const moveFiles = (files) => {
-    files.forEach(file => {
+const moveFiles = async (files) => {
+    await Promise.all(files.map(async file => {
         let targetPath;
         switch (file.fieldname) {
             case 'profile_picture':
@@ -30,15 +30,15 @@ const moveFiles = (files) => {
                 targetPath = `public/uploads/${file.filename}`;
         }
 
-        // Ensure directory exists before moving the file
         ensureDirectoryExistence(path.dirname(targetPath));
 
         try {
-            fs.renameSync(file.path, targetPath);
+            await fs.promises.rename(file.path, targetPath);
         } catch (error) {
-            console.error(`Error moving file ${file.path} to ${targetPath}:`, error);
+            logger.error(`Error moving file ${file.path} to ${targetPath}:`, error);
+            throw error;
         }
-    });
+    }));
 };
 
 const create = async (user, request, files) => {
@@ -157,10 +157,10 @@ const update = async (user, request, files) => {
 
     if (files.length > 0 && oldContact.profile_picture) {
         const oldFilePath = path.resolve(oldContact.profile_picture);
-        console.log('Deleting old file at:', oldFilePath);
+        logger.info('Deleting old file at:', oldFilePath);
         fs.unlink(oldFilePath, (err) => {
             if (err) {
-                console.error("Error deleting old profile picture:", err);
+                logger.error("Error deleting old profile picture:", err);
             }
         });
     }
@@ -169,12 +169,12 @@ const update = async (user, request, files) => {
         files.forEach(file => {
             if (file.fieldname === 'profile_picture') {
                 const targetPath = path.resolve(`public/images/profiles/${file.filename}`);
-                console.log('Moving new file to:', targetPath);
+                logger.info('Moving new file to:', targetPath);
                 ensureDirectoryExistence(path.dirname(targetPath));
                 try {
                     fs.renameSync(file.path, targetPath);
                 } catch (error) {
-                    console.error(`Error moving file ${file.path} to ${targetPath}:`, error);
+                    logger.error(`Error moving file ${file.path} to ${targetPath}:`, error);
                 }
             }
         });
