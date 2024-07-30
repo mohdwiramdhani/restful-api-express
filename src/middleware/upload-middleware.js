@@ -10,23 +10,10 @@ const ensureDirectoryExistence = (directory) => {
     }
 };
 
-// Function to create dynamic storage
-const createDynamicStorage = () => multer.diskStorage({
+// Storage configuration with a temporary directory
+const tempStorage = multer.diskStorage({
     destination: (req, file, cb) => {
-        let dest;
-        switch (file.fieldname) {
-            case 'profile_picture':
-                dest = 'public/images/profiles/';
-                break;
-            case 'certificate':
-                dest = 'public/files/certificates/';
-                break;
-            case 'location_picture':
-                dest = 'public/images/locations/';
-                break;
-            default:
-                dest = 'public/uploads/';
-        }
+        const dest = 'temp/uploads/';
         ensureDirectoryExistence(dest);
         cb(null, dest);
     },
@@ -37,8 +24,8 @@ const createDynamicStorage = () => multer.diskStorage({
     }
 });
 
-// Function to create dynamic file filter
-const createDynamicFilter = () => (req, file, cb) => {
+// File filter configuration
+const fileFilter = (req, file, cb) => {
     const fileTypes = {
         'profile_picture': /jpeg|jpg|png/,
         'certificate': /pdf/,
@@ -55,11 +42,12 @@ const createDynamicFilter = () => (req, file, cb) => {
     cb(new Error('Error: File type not allowed!'));
 };
 
-// Middleware setup
 export const uploadFile = multer({
-    storage: createDynamicStorage(),
-    fileFilter: createDynamicFilter(),
+    storage: tempStorage,
+    fileFilter,
     limits: {
-        fileSize: 1 * 1024 * 1024 // Default to 2 MB for all files
+        fileSize: 1 * 1024 * 1024 // 1 MB
     }
 });
+
+export default uploadFile;

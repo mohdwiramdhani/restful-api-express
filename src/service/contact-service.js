@@ -6,6 +6,37 @@ import {
 } from "../validation/contact-validation.js";
 import { prismaClient } from "../application/database.js";
 import { ResponseError } from "../error/response-error.js";
+import fs from "fs";
+import path from "path";
+
+const ensureDirectoryExistence = (directory) => {
+    if (!fs.existsSync(directory)) {
+        fs.mkdirSync(directory, { recursive: true });
+    }
+};
+
+
+const moveFiles = (files) => {
+    files.forEach(file => {
+        let targetPath;
+        switch (file.fieldname) {
+            case 'profile_picture':
+                targetPath = `public/images/profiles/${file.filename}`;
+                break;
+            case 'certificate':
+                targetPath = `public/files/certificates/${file.filename}`;
+                break;
+            default:
+                targetPath = `public/uploads/${file.filename}`;
+        }
+
+        // Ensure directory exists before moving the file
+        ensureDirectoryExistence(path.dirname(targetPath));
+
+        fs.renameSync(file.path, targetPath);
+    });
+};
+
 
 const create = async (user, request, files) => {
     const contact = validate(createContactValidation, request);
@@ -15,10 +46,10 @@ const create = async (user, request, files) => {
         files.forEach(file => {
             switch (file.fieldname) {
                 case 'profile_picture':
-                    contact.profile_picture = file.path.replace(/\\/g, '/');
+                    contact.profile_picture = `public/images/profiles/${file.filename}`;
                     break;
                 case 'certificate':
-                    contact.certificate = file.path.replace(/\\/g, '/');
+                    contact.certificate = `public/files/certificates/${file.filename}`;
                     break;
                 default:
                     break;
@@ -26,7 +57,7 @@ const create = async (user, request, files) => {
         });
     }
 
-    return prismaClient.contact.create({
+    const result = await prismaClient.contact.create({
         data: contact,
         select: {
             id: true,
@@ -37,6 +68,10 @@ const create = async (user, request, files) => {
             profile_picture: true
         }
     });
+
+    moveFiles(files);
+
+    return result;
 };
 
 const get = async (user, contactId) => {

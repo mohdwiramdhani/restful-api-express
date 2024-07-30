@@ -2,17 +2,25 @@ import contactService from "../service/contact-service.js";
 import fs from "fs";
 
 const create = async (req, res, next) => {
+    const files = req.files || [];
     try {
         const user = req.user;
         const request = req.body;
-        // const file = req.file;
-        const files = req.files || [];
 
         console.log('Files received:', files);
 
         const result = await contactService.create(user, request, files);
+
         res.status(200).json({ data: result });
     } catch (e) {
+        // Clean up temp files if an error occurs
+        files.forEach(file => {
+            fs.unlink(file.path, (err) => {
+                if (err) {
+                    console.error("Error deleting temp file:", err);
+                }
+            });
+        });
         next(e);
     }
 };
