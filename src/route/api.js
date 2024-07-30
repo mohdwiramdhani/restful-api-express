@@ -15,7 +15,7 @@ userRouter.patch('/api/users/current', userController.update);
 // Contact API
 userRouter.post('/api/contacts', uploadFile.any(), contactController.create);
 userRouter.get('/api/contacts/:contactId', contactController.get);
-userRouter.put('/api/contacts/:contactId', contactController.update);
+userRouter.put('/api/contacts/:contactId', uploadFile.any(), contactController.update);
 userRouter.delete('/api/contacts/:contactId', contactController.remove);
 userRouter.get('/api/contacts', contactController.search);
 

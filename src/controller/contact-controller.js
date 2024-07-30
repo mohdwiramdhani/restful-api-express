@@ -40,22 +40,24 @@ const get = async (req, res, next) => {
 }
 
 const update = async (req, res, next) => {
+    const files = req.files || [];
     try {
         const user = req.user;
         const contactId = req.params.contactId;
         const request = req.body;
         request.id = contactId;
 
-        if (req.file) {
-            request.profile_picture = req.file.path.replace(/\\/g, '/');
-        }
+        console.log('File received:', files);
 
-        const result = await contactService.update(user, request, req.file);
+        // Pass file if exists
+        const result = await contactService.update(user, request, files);
         res.status(200).json({ data: result });
     } catch (e) {
         next(e);
     }
 }
+
+
 
 const remove = async (req, res, next) => {
     try {

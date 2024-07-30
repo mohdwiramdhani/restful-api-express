@@ -33,10 +33,13 @@ const moveFiles = (files) => {
         // Ensure directory exists before moving the file
         ensureDirectoryExistence(path.dirname(targetPath));
 
-        fs.renameSync(file.path, targetPath);
+        try {
+            fs.renameSync(file.path, targetPath);
+        } catch (error) {
+            console.error(`Error moving file ${file.path} to ${targetPath}:`, error);
+        }
     });
 };
-
 
 const create = async (user, request, files) => {
     const contact = validate(createContactValidation, request);
@@ -99,7 +102,7 @@ const get = async (user, contactId) => {
     return contact;
 }
 
-const update = async (user, request, file) => {
+const update = async (user, request, files) => {
     const contact = validate(updateContactValidation, request);
 
     const totalContactInDatabase = await prismaClient.contact.count({
@@ -129,8 +132,12 @@ const update = async (user, request, file) => {
         phone: contact.phone,
     };
 
-    if (request.profile_picture) {
-        updateData.profile_picture = request.profile_picture;
+    if (files.length > 0) {
+        files.forEach(file => {
+            if (file.fieldname === 'profile_picture') {
+                updateData.profile_picture = `public/images/profiles/${file.filename}`;
+            }
+        });
     }
 
     const updatedContact = await prismaClient.contact.update({
@@ -148,16 +155,34 @@ const update = async (user, request, file) => {
         }
     });
 
-    if (file && oldContact.profile_picture) {
-        fs.unlink(oldContact.profile_picture, (err) => {
+    if (files.length > 0 && oldContact.profile_picture) {
+        const oldFilePath = path.resolve(oldContact.profile_picture);
+        console.log('Deleting old file at:', oldFilePath);
+        fs.unlink(oldFilePath, (err) => {
             if (err) {
                 console.error("Error deleting old profile picture:", err);
             }
         });
     }
 
+    if (files.length > 0) {
+        files.forEach(file => {
+            if (file.fieldname === 'profile_picture') {
+                const targetPath = path.resolve(`public/images/profiles/${file.filename}`);
+                console.log('Moving new file to:', targetPath);
+                ensureDirectoryExistence(path.dirname(targetPath));
+                try {
+                    fs.renameSync(file.path, targetPath);
+                } catch (error) {
+                    console.error(`Error moving file ${file.path} to ${targetPath}:`, error);
+                }
+            }
+        });
+    }
+
     return updatedContact;
-}
+};
+
 
 const remove = async (user, contactId) => {
     contactId = validate(getContactValidation, contactId);
