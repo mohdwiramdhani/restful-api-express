@@ -1,14 +1,24 @@
 import contactService from "../service/contact-service.js";
+import path from "path";
+import fs from "fs";
 
 const create = async (req, res, next) => {
+    let photoPath = null;
     try {
         const user = req.user;
         const request = req.body;
 
-        const result = await contactService.create(user, request);
+        if (req.file) {
+            photoPath = req.file.path.replace(/\\/g, '/');
+        }
+
+        const result = await contactService.create(user, request, photoPath);
 
         res.status(200).json({ data: result });
     } catch (e) {
+        if (photoPath && fs.existsSync(photoPath)) {
+            fs.unlinkSync(photoPath);
+        }
         next(e);
     }
 };

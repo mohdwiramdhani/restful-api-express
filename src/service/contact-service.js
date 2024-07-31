@@ -6,22 +6,34 @@ import {
 } from "../validation/contact-validation.js";
 import { prismaClient } from "../application/database.js";
 import { ResponseError } from "../error/response-error.js";
+import path from "path";
 
-const create = async (user, request) => {
+const create = async (user, request, photoPath) => {
     const contact = validate(createContactValidation, request);
     contact.username = user.username;
+    contact.photo = photoPath; // Simpan path relatif
+    console.log(`APAPAPA${photoPath}`);
 
-    return prismaClient.contact.create({
-        data: contact,
-        select: {
-            id: true,
-            first_name: true,
-            last_name: true,
-            email: true,
-            phone: true
-        }
-    });
-}
+
+    try {
+        const newContact = await prismaClient.contact.create({
+            data: contact,
+            select: {
+                id: true,
+                first_name: true,
+                last_name: true,
+                email: true,
+                phone: true,
+                photo: true
+            }
+        });
+
+        return newContact;
+    } catch (error) {
+        throw error;
+    }
+};
+
 
 const get = async (user, contactId) => {
     contactId = validate(getContactValidation, contactId);

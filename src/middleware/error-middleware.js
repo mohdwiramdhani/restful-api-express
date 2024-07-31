@@ -10,13 +10,15 @@ const errorMiddleware = async (err, req, res, next) => {
         res.status(err.status).json({
             errors: err.message
         }).end();
+    } else if (err.code === 'LIMIT_FILE_SIZE') { // Tambahkan kondisi untuk error batasan ukuran file
+        res.status(400).json({
+            errors: 'File too large'
+        }).end();
     } else {
         res.status(500).json({
             errors: err.message
         }).end();
     }
-}
+};
 
-export {
-    errorMiddleware
-}
+export { errorMiddleware };

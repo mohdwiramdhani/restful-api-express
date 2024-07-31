@@ -22,6 +22,7 @@ model Contact {
   last_name  String?   @db.VarChar(100)
   email      String?   @db.VarChar(200)
   phone      String?   @db.VarChar(20)
+  photo      String?   @db.VarChar(200)
   username   String    @db.VarChar(100)
   user       User      @relation(fields: [username], references: [username])
   Address    Address[]

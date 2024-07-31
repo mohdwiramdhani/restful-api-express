@@ -5,6 +5,7 @@ CREATE TABLE `contacts` (
     `last_name` VARCHAR(100) NULL,
     `email` VARCHAR(200) NULL,
     `phone` VARCHAR(20) NULL,
+    `photo` VARCHAR(200) NULL,
     `username` VARCHAR(100) NOT NULL,
 
     PRIMARY KEY (`id`)
