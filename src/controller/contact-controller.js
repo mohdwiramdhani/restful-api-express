@@ -3,7 +3,7 @@ import { logger } from "../application/logging.js";
 import fs from "fs";
 
 const create = async (req, res, next) => {
-    const files = req.files || [];
+    const files = req.files || {};
     try {
         const user = req.user;
         const request = req.body;
@@ -14,14 +14,16 @@ const create = async (req, res, next) => {
 
         res.status(200).json({ data: result });
     } catch (e) {
-        // Clean up temp files if an error occurs
-        files.forEach(file => {
-            fs.unlink(file.path, (err) => {
-                if (err) {
-                    logger.error("Error deleting temp file:", err);
-                }
+        for (const fieldName in files) {
+            const fileArray = files[fieldName];
+            fileArray.forEach(file => {
+                fs.unlink(file.path, (err) => {
+                    if (err) {
+                        logger.error("Error deleting temp file:", err);
+                    }
+                });
             });
-        });
+        }
         next(e);
     }
 };

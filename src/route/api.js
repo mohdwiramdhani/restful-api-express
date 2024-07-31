@@ -5,6 +5,8 @@ import addressController from "../controller/address-controller.js";
 import { authMiddleware } from "../middleware/auth-middleware.js";
 import { uploadFile } from '../middleware/upload-middleware.js';
 
+var upload = uploadFile.fields([{ name: 'profile_picture' }, { name: 'certificate' }])
+
 const userRouter = new express.Router();
 userRouter.use(authMiddleware);
 
@@ -13,9 +15,9 @@ userRouter.get('/api/users/current', userController.get);
 userRouter.patch('/api/users/current', userController.update);
 
 // Contact API
-userRouter.post('/api/contacts', uploadFile.any(), contactController.create);
+userRouter.post('/api/contacts', upload, contactController.create);
 userRouter.get('/api/contacts/:contactId', contactController.get);
-userRouter.put('/api/contacts/:contactId', uploadFile.any(), contactController.update);
+// userRouter.put('/api/contacts/:contactId', uploadFile.any(), contactController.update);
 userRouter.delete('/api/contacts/:contactId', contactController.remove);
 userRouter.get('/api/contacts', contactController.search);
 

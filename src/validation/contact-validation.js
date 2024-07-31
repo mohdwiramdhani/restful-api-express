@@ -6,6 +6,7 @@ const createContactValidation = Joi.object({
     email: Joi.string().max(200).email().optional(),
     phone: Joi.string().max(20).optional(),
     profile_picture: Joi.string().max(255).optional(),
+    certificate: Joi.string().max(255).optional(),
 });
 
 const getContactValidation = Joi.number().positive().required();

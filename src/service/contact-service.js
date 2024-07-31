@@ -17,47 +17,55 @@ const ensureDirectoryExistence = (directory) => {
 };
 
 const moveFiles = async (files) => {
-    await Promise.all(files.map(async file => {
-        let targetPath;
-        switch (file.fieldname) {
-            case 'profile_picture':
-                targetPath = `public/images/profiles/${file.filename}`;
-                break;
-            case 'certificate':
-                targetPath = `public/files/certificates/${file.filename}`;
-                break;
-            default:
-                targetPath = `public/uploads/${file.filename}`;
-        }
+    // Loop through each field
+    for (const fieldName in files) {
+        const fileArray = files[fieldName];
+        await Promise.all(fileArray.map(async file => {
+            let targetPath;
+            switch (file.fieldname) {
+                case 'profile_picture':
+                    targetPath = `public/images/profiles/${file.filename}`;
+                    break;
+                case 'certificate':
+                    targetPath = `public/files/certificates/${file.filename}`;
+                    break;
+                default:
+                    targetPath = `public/uploads/${file.filename}`;
+            }
 
-        ensureDirectoryExistence(path.dirname(targetPath));
+            ensureDirectoryExistence(path.dirname(targetPath));
 
-        try {
-            await fs.promises.rename(file.path, targetPath);
-        } catch (error) {
-            logger.error(`Error moving file ${file.path} to ${targetPath}:`, error);
-            throw error;
-        }
-    }));
+            try {
+                await fs.promises.rename(file.path, targetPath);
+            } catch (error) {
+                logger.error(`Error moving file ${file.path} to ${targetPath}:`, error);
+                throw error;
+            }
+        }));
+    }
 };
 
 const create = async (user, request, files) => {
     const contact = validate(createContactValidation, request);
     contact.username = user.username;
 
-    if (files.length > 0) {
-        files.forEach(file => {
-            switch (file.fieldname) {
-                case 'profile_picture':
-                    contact.profile_picture = `public/images/profiles/${file.filename}`;
-                    break;
-                case 'certificate':
-                    contact.certificate = `public/files/certificates/${file.filename}`;
-                    break;
-                default:
-                    break;
-            }
-        });
+    if (files && Object.keys(files).length > 0) {
+        // Handle files
+        for (const fieldName in files) {
+            const fileArray = files[fieldName];
+            fileArray.forEach(file => {
+                switch (file.fieldname) {
+                    case 'profile_picture':
+                        contact.profile_picture = `public/images/profiles/${file.filename}`;
+                        break;
+                    case 'certificate':
+                        contact.certificate = `public/files/certificates/${file.filename}`;
+                        break;
+                    default:
+                        break;
+                }
+            });
+        }
     }
 
     const result = await prismaClient.contact.create({
@@ -68,11 +76,12 @@ const create = async (user, request, files) => {
             last_name: true,
             email: true,
             phone: true,
-            profile_picture: true
+            profile_picture: true,
+            certificate: true
         }
     });
 
-    moveFiles(files);
+    await moveFiles(files);
 
     return result;
 };
