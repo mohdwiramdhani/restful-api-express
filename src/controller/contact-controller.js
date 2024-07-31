@@ -1,27 +1,14 @@
 import contactService from "../service/contact-service.js";
-import { logger } from "../application/logging.js";
-import fs from "fs";
 
 const create = async (req, res, next) => {
-    const files = req.files || [];
     try {
         const user = req.user;
         const request = req.body;
 
-        logger.info('Files received:', files);
-
-        const result = await contactService.create(user, request, files);
+        const result = await contactService.create(user, request);
 
         res.status(200).json({ data: result });
     } catch (e) {
-        // Clean up temp files if an error occurs
-        files.forEach(file => {
-            fs.unlink(file.path, (err) => {
-                if (err) {
-                    logger.error("Error deleting temp file:", err);
-                }
-            });
-        });
         next(e);
     }
 };
@@ -41,24 +28,18 @@ const get = async (req, res, next) => {
 }
 
 const update = async (req, res, next) => {
-    const files = req.files || [];
     try {
         const user = req.user;
         const contactId = req.params.contactId;
         const request = req.body;
         request.id = contactId;
 
-        logger.info('File received:', files);
-
-        // Pass file if exists
-        const result = await contactService.update(user, request, files);
+        const result = await contactService.update(user, request);
         res.status(200).json({ data: result });
     } catch (e) {
         next(e);
     }
 }
-
-
 
 const remove = async (req, res, next) => {
     try {
