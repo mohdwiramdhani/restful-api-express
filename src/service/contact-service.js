@@ -1,19 +1,18 @@
 import { validate } from "../validation/validation.js";
 import {
     createContactValidation,
-    getContactValidation, searchContactValidation,
+    getContactValidation,
+    searchContactValidation,
     updateContactValidation
 } from "../validation/contact-validation.js";
 import { prismaClient } from "../application/database.js";
 import { ResponseError } from "../error/response-error.js";
-import path from "path";
+import fs from "fs";
 
 const create = async (user, request, photoPath) => {
     const contact = validate(createContactValidation, request);
     contact.username = user.username;
-    contact.photo = photoPath; // Simpan path relatif
-    console.log(`APAPAPA${photoPath}`);
-
+    contact.photo = photoPath;
 
     try {
         const newContact = await prismaClient.contact.create({
@@ -33,7 +32,6 @@ const create = async (user, request, photoPath) => {
         throw error;
     }
 };
-
 
 const get = async (user, contactId) => {
     contactId = validate(getContactValidation, contactId);
@@ -59,8 +57,9 @@ const get = async (user, contactId) => {
     return contact;
 }
 
-const update = async (user, request) => {
+const update = async (user, request, newPhotoPath) => {
     const contact = validate(updateContactValidation, request);
+    contact.photo = newPhotoPath;
 
     const totalContactInDatabase = await prismaClient.contact.count({
         where: {
@@ -73,6 +72,20 @@ const update = async (user, request) => {
         throw new ResponseError(404, "contact is not found");
     }
 
+    const oldContact = await prismaClient.contact.findFirst({
+        where: {
+            username: user.username,
+            id: contact.id
+        },
+        select: {
+            photo: true
+        }
+    });
+
+    if (oldContact.photo && fs.existsSync(oldContact.photo)) {
+        fs.unlinkSync(oldContact.photo);
+    }
+
     return prismaClient.contact.update({
         where: {
             id: contact.id
@@ -82,13 +95,15 @@ const update = async (user, request) => {
             last_name: contact.last_name,
             email: contact.email,
             phone: contact.phone,
+            photo: contact.photo
         },
         select: {
             id: true,
             first_name: true,
             last_name: true,
             email: true,
-            phone: true
+            phone: true,
+            photo: true
         }
     })
 }
@@ -181,7 +196,6 @@ const search = async (user, request) => {
         }
     }
 }
-
 
 export default {
     create,

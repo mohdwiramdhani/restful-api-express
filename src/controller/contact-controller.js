@@ -1,5 +1,4 @@
 import contactService from "../service/contact-service.js";
-import path from "path";
 import fs from "fs";
 
 const create = async (req, res, next) => {
@@ -38,15 +37,23 @@ const get = async (req, res, next) => {
 }
 
 const update = async (req, res, next) => {
+    let newPhotoPath = null;
     try {
         const user = req.user;
         const contactId = req.params.contactId;
         const request = req.body;
         request.id = contactId;
 
-        const result = await contactService.update(user, request);
+        if (req.file) {
+            newPhotoPath = req.file.path.replace(/\\/g, '/');
+        }
+
+        const result = await contactService.update(user, request, newPhotoPath);
         res.status(200).json({ data: result });
     } catch (e) {
+        if (newPhotoPath && fs.existsSync(newPhotoPath)) {
+            fs.unlinkSync(newPhotoPath);
+        }
         next(e);
     }
 }

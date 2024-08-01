@@ -16,6 +16,7 @@ const updateContactValidation = Joi.object({
     last_name: Joi.string().max(100).optional(),
     email: Joi.string().max(200).email().optional(),
     phone: Joi.string().max(20).optional(),
+    photo: Joi.string().max(200).optional(),
 });
 
 const searchContactValidation = Joi.object({
