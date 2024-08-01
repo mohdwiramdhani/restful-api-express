@@ -1,20 +1,32 @@
 import addressService from "../service/address-service.js";
+import fs from "fs"
 
 const create = async (req, res, next) => {
+    let files = {};
     try {
         const user = req.user;
         const request = req.body;
         const contactId = req.params.contactId;
 
-        const result = await addressService.create(user, contactId, request);
+        if (req.files) {
+            req.files.forEach(file => {
+                files[file.fieldname] = file.path.replace(/\\/g, '/');
+            });
+        }
 
-        res.status(200).json({
-            data: result
-        });
+        console.log("🚀 ~ create ~ files:", files)
+        const result = await addressService.create(user, contactId, request, files);
+
+        res.status(200).json({ data: result });
     } catch (e) {
+        Object.values(files).forEach(filePath => {
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+        });
         next(e);
     }
-}
+};
 
 const get = async (req, res, next) => {
     try {

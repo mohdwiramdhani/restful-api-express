@@ -23,11 +23,13 @@ const checkContactMustExists = async (user, contactId) => {
     return contactId;
 }
 
-const create = async (user, contactId, request) => {
+const create = async (user, contactId, request, files) => {
     contactId = await checkContactMustExists(user, contactId);
 
     const address = validate(createAddressValidation, request);
     address.contact_id = contactId;
+
+    address.location = files.location || null;
 
     return prismaClient.address.create({
         data: address,
@@ -37,10 +39,11 @@ const create = async (user, contactId, request) => {
             city: true,
             province: true,
             country: true,
-            postal_code: true
+            postal_code: true,
+            location: true
         }
     })
-}
+};
 
 const get = async (user, contactId, addressId) => {
     contactId = await checkContactMustExists(user, contactId);
