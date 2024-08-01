@@ -8,16 +8,15 @@ const create = async (req, res, next) => {
         const request = req.body;
 
         if (req.files) {
-            req.files.forEach(file => {
-                files[file.fieldname] = file.path.replace(/\\/g, '/');
-            });
+            for (const [fieldname, fileArray] of Object.entries(req.files)) {
+                files[fieldname] = fileArray[0].path.replace(/\\/g, '/');
+            }
         }
 
         const result = await contactService.create(user, request, files);
 
         res.status(200).json({ data: result });
     } catch (e) {
-        // Remove any uploaded files in case of an error
         Object.values(files).forEach(filePath => {
             if (fs.existsSync(filePath)) {
                 fs.unlinkSync(filePath);
@@ -50,9 +49,9 @@ const update = async (req, res, next) => {
         request.id = contactId;
 
         if (req.files) {
-            req.files.forEach(file => {
-                files[file.fieldname] = file.path.replace(/\\/g, '/');
-            });
+            for (const [fieldname, fileArray] of Object.entries(req.files)) {
+                files[fieldname] = fileArray[0].path.replace(/\\/g, '/');
+            }
         }
 
         const result = await contactService.update(user, request, files);

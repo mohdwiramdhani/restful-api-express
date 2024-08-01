@@ -9,12 +9,11 @@ const create = async (req, res, next) => {
         const contactId = req.params.contactId;
 
         if (req.files) {
-            req.files.forEach(file => {
-                files[file.fieldname] = file.path.replace(/\\/g, '/');
-            });
+            for (const [fieldname, fileArray] of Object.entries(req.files)) {
+                files[fieldname] = fileArray[0].path.replace(/\\/g, '/');
+            }
         }
 
-        console.log("🚀 ~ create ~ files:", files)
         const result = await addressService.create(user, contactId, request, files);
 
         res.status(200).json({ data: result });

@@ -3,7 +3,7 @@ import userController from "../controller/user-controller.js";
 import contactController from "../controller/contact-controller.js";
 import addressController from "../controller/address-controller.js";
 import { authMiddleware } from "../middleware/auth-middleware.js";
-import multerMiddleware from "../middleware/multer-middleware.js";
+import { multerMiddleware } from "../middleware/multer-middleware.js";
 
 const userRouter = new express.Router();
 userRouter.use(authMiddleware);
@@ -13,16 +13,38 @@ userRouter.get('/api/users/current', userController.get);
 userRouter.patch('/api/users/current', userController.update);
 
 // Contact API
-userRouter.post('/api/contacts', multerMiddleware, contactController.create);
+userRouter.post('/api/contacts',
+    multerMiddleware([
+        { name: 'photo', maxCount: 1 },
+        { name: 'certificate', maxCount: 1 }
+    ]),
+    contactController.create
+);
 userRouter.get('/api/contacts/:contactId', contactController.get);
-userRouter.put('/api/contacts/:contactId', multerMiddleware, contactController.update);
+userRouter.put('/api/contacts/:contactId',
+    multerMiddleware([
+        { name: 'photo', maxCount: 1 },
+        { name: 'certificate', maxCount: 1 }
+    ]),
+    contactController.update
+);
 userRouter.delete('/api/contacts/:contactId', contactController.remove);
 userRouter.get('/api/contacts', contactController.search);
 
 // Address API
-userRouter.post('/api/contacts/:contactId/addresses', multerMiddleware, addressController.create);
+userRouter.post('/api/contacts/:contactId/addresses',
+    multerMiddleware([
+        { name: 'location', maxCount: 1 }
+    ]),
+    addressController.create
+);
 userRouter.get('/api/contacts/:contactId/addresses/:addressId', addressController.get);
-userRouter.put('/api/contacts/:contactId/addresses/:addressId', addressController.update);
+userRouter.put('/api/contacts/:contactId/addresses/:addressId',
+    multerMiddleware([
+        { name: 'location', maxCount: 1 }
+    ]),
+    addressController.update
+);
 userRouter.delete('/api/contacts/:contactId/addresses/:addressId', addressController.remove);
 userRouter.get('/api/contacts/:contactId/addresses', addressController.list);
 
