@@ -2,22 +2,27 @@ import contactService from "../service/contact-service.js";
 import fs from "fs";
 
 const create = async (req, res, next) => {
-    let photoPath = null;
+    let files = {};
     try {
         const user = req.user;
         const request = req.body;
 
-        if (req.file) {
-            photoPath = req.file.path.replace(/\\/g, '/');
+        if (req.files) {
+            req.files.forEach(file => {
+                files[file.fieldname] = file.path.replace(/\\/g, '/');
+            });
         }
 
-        const result = await contactService.create(user, request, photoPath);
+        const result = await contactService.create(user, request, files);
 
         res.status(200).json({ data: result });
     } catch (e) {
-        if (photoPath && fs.existsSync(photoPath)) {
-            fs.unlinkSync(photoPath);
-        }
+        // Remove any uploaded files in case of an error
+        Object.values(files).forEach(filePath => {
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+        });
         next(e);
     }
 };
@@ -37,26 +42,30 @@ const get = async (req, res, next) => {
 }
 
 const update = async (req, res, next) => {
-    let newPhotoPath = null;
+    let files = {};
     try {
         const user = req.user;
         const contactId = req.params.contactId;
         const request = req.body;
         request.id = contactId;
 
-        if (req.file) {
-            newPhotoPath = req.file.path.replace(/\\/g, '/');
+        if (req.files) {
+            req.files.forEach(file => {
+                files[file.fieldname] = file.path.replace(/\\/g, '/');
+            });
         }
 
-        const result = await contactService.update(user, request, newPhotoPath);
+        const result = await contactService.update(user, request, files);
         res.status(200).json({ data: result });
     } catch (e) {
-        if (newPhotoPath && fs.existsSync(newPhotoPath)) {
-            fs.unlinkSync(newPhotoPath);
-        }
+        Object.values(files).forEach(filePath => {
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+        });
         next(e);
     }
-}
+};
 
 const remove = async (req, res, next) => {
     try {

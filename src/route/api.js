@@ -3,7 +3,7 @@ import userController from "../controller/user-controller.js";
 import contactController from "../controller/contact-controller.js";
 import addressController from "../controller/address-controller.js";
 import { authMiddleware } from "../middleware/auth-middleware.js";
-import upload from "../middleware/multer-middleware.js";
+import multerMiddleware from "../middleware/multer-middleware.js";
 
 const userRouter = new express.Router();
 userRouter.use(authMiddleware);
@@ -13,9 +13,9 @@ userRouter.get('/api/users/current', userController.get);
 userRouter.patch('/api/users/current', userController.update);
 
 // Contact API
-userRouter.post('/api/contacts', upload.single('photo'), contactController.create);
+userRouter.post('/api/contacts', multerMiddleware, contactController.create);
 userRouter.get('/api/contacts/:contactId', contactController.get);
-userRouter.put('/api/contacts/:contactId', upload.single('photo'), contactController.update);
+userRouter.put('/api/contacts/:contactId', multerMiddleware, contactController.update);
 userRouter.delete('/api/contacts/:contactId', contactController.remove);
 userRouter.get('/api/contacts', contactController.search);
 

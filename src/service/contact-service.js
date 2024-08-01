@@ -9,10 +9,11 @@ import { prismaClient } from "../application/database.js";
 import { ResponseError } from "../error/response-error.js";
 import fs from "fs";
 
-const create = async (user, request, photoPath) => {
+const create = async (user, request, files) => {
     const contact = validate(createContactValidation, request);
     contact.username = user.username;
-    contact.photo = photoPath;
+    contact.photo = files.photo || null;
+    contact.certificate = files.certificate || null;
 
     try {
         const newContact = await prismaClient.contact.create({
@@ -23,7 +24,8 @@ const create = async (user, request, photoPath) => {
                 last_name: true,
                 email: true,
                 phone: true,
-                photo: true
+                photo: true,
+                certificate: true
             }
         });
 
@@ -46,7 +48,9 @@ const get = async (user, contactId) => {
             first_name: true,
             last_name: true,
             email: true,
-            phone: true
+            phone: true,
+            photo: true,
+            certificate: true
         }
     });
 
@@ -57,20 +61,18 @@ const get = async (user, contactId) => {
     return contact;
 }
 
-const update = async (user, request, newPhotoPath) => {
+const update = async (user, request, files) => {
     const contact = validate(updateContactValidation, request);
-    contact.photo = newPhotoPath;
 
-    const totalContactInDatabase = await prismaClient.contact.count({
-        where: {
-            username: user.username,
-            id: contact.id
+    const updateFile = (oldFile, newFile) => {
+        if (newFile) {
+            if (oldFile && fs.existsSync(oldFile)) {
+                fs.unlinkSync(oldFile);
+            }
+            return newFile;
         }
-    });
-
-    if (totalContactInDatabase !== 1) {
-        throw new ResponseError(404, "contact is not found");
-    }
+        return oldFile;
+    };
 
     const oldContact = await prismaClient.contact.findFirst({
         where: {
@@ -78,13 +80,17 @@ const update = async (user, request, newPhotoPath) => {
             id: contact.id
         },
         select: {
-            photo: true
+            photo: true,
+            certificate: true
         }
     });
 
-    if (oldContact.photo && fs.existsSync(oldContact.photo)) {
-        fs.unlinkSync(oldContact.photo);
+    if (!oldContact) {
+        throw new ResponseError(404, "Contact is not found");
     }
+
+    contact.photo = updateFile(oldContact.photo, files.photo);
+    contact.certificate = updateFile(oldContact.certificate, files.certificate);
 
     return prismaClient.contact.update({
         where: {
@@ -95,7 +101,8 @@ const update = async (user, request, newPhotoPath) => {
             last_name: contact.last_name,
             email: contact.email,
             phone: contact.phone,
-            photo: contact.photo
+            photo: contact.photo,
+            certificate: contact.certificate
         },
         select: {
             id: true,
@@ -103,10 +110,11 @@ const update = async (user, request, newPhotoPath) => {
             last_name: true,
             email: true,
             phone: true,
-            photo: true
+            photo: true,
+            certificate: true
         }
-    })
-}
+    });
+};
 
 const remove = async (user, contactId) => {
     contactId = validate(getContactValidation, contactId);

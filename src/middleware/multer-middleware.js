@@ -2,45 +2,75 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
-import { ResponseError } from "../error/response-error.js"; // Import ResponseError
+import { ResponseError } from "../error/response-error.js";
 
-// Direktori upload
-const uploadDir = 'public/uploads/photos';
+// Define directories and configurations
+const uploadConfigs = {
+    photo: {
+        directory: 'public/uploads/photos',
+        maxSize: 1 * 1024 * 1024, // 1 MB
+        allowedExtensions: /jpg|jpeg|png/
+    },
+    certificate: {
+        directory: 'public/uploads/certificates',
+        maxSize: 1 * 1024 * 1024, // 1 MB
+        allowedExtensions: /pdf/
+    }
+};
 
-// Buat direktori jika belum ada
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
+// Ensure directories exist
+Object.values(uploadConfigs).forEach(config => {
+    if (!fs.existsSync(config.directory)) {
+        fs.mkdirSync(config.directory, { recursive: true });
+    }
+});
 
-// Setup penyimpanan Multer
+// Custom storage configuration to dynamically set directory
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, uploadDir);
+        const config = uploadConfigs[file.fieldname];
+        if (config) {
+            cb(null, config.directory);
+        } else {
+            cb(new ResponseError(400, 'Invalid field name'), false);
+        }
     },
     filename: (req, file, cb) => {
-        const uniqueName = uuidv4(); // Generate UUID
+        const uniqueName = uuidv4();
         cb(null, uniqueName + path.extname(file.originalname));
     }
 });
 
-// Filter file untuk tipe tertentu
+// File filter configuration
 const fileFilter = (req, file, cb) => {
-    const allowedTypes = /jpg|jpeg|png/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
+    const config = uploadConfigs[file.fieldname];
+    if (config) {
+        const extname = config.allowedExtensions.test(path.extname(file.originalname).toLowerCase());
+        const mimetype = config.allowedExtensions.test(file.mimetype);
 
-    if (extname && mimetype) {
-        return cb(null, true);
+        if (extname && mimetype) {
+            cb(null, true);
+        } else {
+            cb(new ResponseError(400, `Only ${config.allowedExtensions} files are allowed!`), false);
+        }
     } else {
-        return cb(new ResponseError(400, 'Only jpg, jpeg, and png files are allowed!'), false);
+        cb(new ResponseError(400, 'Invalid field name'), false);
     }
 };
 
-// Setup Multer dengan batasan ukuran dan filter file
-const upload = multer({
+// Middleware using .any() to allow multiple files from different fields
+const multerMiddleware = multer({
     storage: storage,
-    limits: { fileSize: 1 * 1024 * 1024 }, // Batas ukuran file 1MB
-    fileFilter: fileFilter // Filter file
-});
+    limits: {
+        fileSize: (req, file, cb) => {
+            const config = uploadConfigs[file.fieldname];
+            if (config) {
+                return config.maxSize;
+            }
+            return 1 * 1024 * 1024; // Default to 1 MB
+        }
+    },
+    fileFilter: fileFilter
+}).any();
 
-export default upload;
+export default multerMiddleware;
