@@ -1,5 +1,5 @@
 import addressService from "../service/address-service.js";
-import fs from "fs"
+import fs from "fs";
 
 const create = async (req, res, next) => {
     let files = {};
@@ -41,9 +41,10 @@ const get = async (req, res, next) => {
     } catch (e) {
         next(e);
     }
-}
+};
 
 const update = async (req, res, next) => {
+    let files = {};
     try {
         const user = req.user;
         const contactId = req.params.contactId;
@@ -51,15 +52,26 @@ const update = async (req, res, next) => {
         const request = req.body;
         request.id = addressId;
 
-        const result = await addressService.update(user, contactId, request);
+        if (req.files) {
+            for (const [fieldname, fileArray] of Object.entries(req.files)) {
+                files[fieldname] = fileArray[0].path.replace(/\\/g, '/');
+            }
+        }
+
+        const result = await addressService.update(user, contactId, request, files);
 
         res.status(200).json({
             data: result
         });
     } catch (e) {
+        Object.values(files).forEach(filePath => {
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+        });
         next(e);
     }
-}
+};
 
 const remove = async (req, res, next) => {
     try {
@@ -75,7 +87,7 @@ const remove = async (req, res, next) => {
     } catch (e) {
         next(e);
     }
-}
+};
 
 const list = async (req, res, next) => {
     try {
@@ -90,7 +102,7 @@ const list = async (req, res, next) => {
     } catch (e) {
         next(e);
     }
-}
+};
 
 export default {
     create,
@@ -98,4 +110,4 @@ export default {
     update,
     remove,
     list
-}
+};

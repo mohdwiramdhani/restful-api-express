@@ -1,10 +1,11 @@
 import { prismaClient } from "../application/database.js";
 import { validate } from "../validation/validation.js";
-import { getContactValidation, } from "../validation/contact-validation.js";
+import { getContactValidation } from "../validation/contact-validation.js";
 import { ResponseError } from "../error/response-error.js";
 import {
     createAddressValidation, getAddressValidation, updateAddressValidation
 } from "../validation/address-validation.js";
+import fs from "fs";
 
 const checkContactMustExists = async (user, contactId) => {
     contactId = validate(getContactValidation, contactId);
@@ -21,7 +22,7 @@ const checkContactMustExists = async (user, contactId) => {
     }
 
     return contactId;
-}
+};
 
 const create = async (user, contactId, request, files) => {
     contactId = await checkContactMustExists(user, contactId);
@@ -42,7 +43,7 @@ const create = async (user, contactId, request, files) => {
             postal_code: true,
             location: true
         }
-    })
+    });
 };
 
 const get = async (user, contactId, addressId) => {
@@ -69,11 +70,36 @@ const get = async (user, contactId, addressId) => {
     }
 
     return address;
-}
+};
 
-const update = async (user, contactId, request) => {
+const update = async (user, contactId, request, files) => {
     contactId = await checkContactMustExists(user, contactId);
     const address = validate(updateAddressValidation, request);
+
+    const updateFile = (oldFile, newFile) => {
+        if (newFile) {
+            if (oldFile && fs.existsSync(oldFile)) {
+                fs.unlinkSync(oldFile);
+            }
+            return newFile;
+        }
+        return oldFile;
+    };
+
+    const oldAddress = await prismaClient.address.findFirst({
+        where: {
+            id: address.id
+        },
+        select: {
+            location: true
+        }
+    });
+
+    if (!oldAddress) {
+        throw new ResponseError(404, "Address is not found");
+    }
+
+    address.location = updateFile(oldAddress.location, files.location);
 
     const totalAddressInDatabase = await prismaClient.address.count({
         where: {
@@ -96,6 +122,7 @@ const update = async (user, contactId, request) => {
             province: address.province,
             country: address.country,
             postal_code: address.postal_code,
+            location: address.location
         },
         select: {
             id: true,
@@ -103,10 +130,11 @@ const update = async (user, contactId, request) => {
             city: true,
             province: true,
             country: true,
-            postal_code: true
+            postal_code: true,
+            location: true
         }
-    })
-}
+    });
+};
 
 const remove = async (user, contactId, addressId) => {
     contactId = await checkContactMustExists(user, contactId);
@@ -128,7 +156,7 @@ const remove = async (user, contactId, addressId) => {
             id: addressId
         }
     });
-}
+};
 
 const list = async (user, contactId) => {
     contactId = await checkContactMustExists(user, contactId);
@@ -145,8 +173,8 @@ const list = async (user, contactId) => {
             country: true,
             postal_code: true
         }
-    })
-}
+    });
+};
 
 export default {
     create,
@@ -154,4 +182,4 @@ export default {
     update,
     remove,
     list
-}
+};

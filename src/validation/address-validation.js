@@ -17,7 +17,8 @@ const updateAddressValidation = Joi.object({
     city: Joi.string().max(100).optional(),
     province: Joi.string().max(100).optional(),
     country: Joi.string().max(100).required(),
-    postal_code: Joi.string().max(10).required()
+    postal_code: Joi.string().max(10).required(),
+    location: Joi.string().max(200).optional()
 });
 
 export {
