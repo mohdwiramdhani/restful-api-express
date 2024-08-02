@@ -32,18 +32,10 @@ userRouter.delete('/api/contacts/:contactId', contactController.remove);
 userRouter.get('/api/contacts', contactController.search);
 
 // Address API
-userRouter.post('/api/contacts/:contactId/addresses',
-    multerMiddleware([
-        { name: 'location', maxCount: 1 }
-    ]),
-    addressController.create
+userRouter.post('/api/contacts/:contactId/addresses', addressController.create
 );
 userRouter.get('/api/contacts/:contactId/addresses/:addressId', addressController.get);
-userRouter.put('/api/contacts/:contactId/addresses/:addressId',
-    multerMiddleware([
-        { name: 'location', maxCount: 1 }
-    ]),
-    addressController.update
+userRouter.put('/api/contacts/:contactId/addresses/:addressId', addressController.update
 );
 userRouter.delete('/api/contacts/:contactId/addresses/:addressId', addressController.remove);
 userRouter.get('/api/contacts/:contactId/addresses', addressController.list);

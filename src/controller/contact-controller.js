@@ -1,27 +1,20 @@
 import contactService from "../service/contact-service.js";
-import fs from "fs";
+import { saveFiles, deleteFiles } from "../middleware/multer-middleware.js";
 
 const create = async (req, res, next) => {
-    let files = {};
+    let savedFiles = [];
     try {
         const user = req.user;
         const request = req.body;
 
         if (req.files) {
-            for (const [fieldname, fileArray] of Object.entries(req.files)) {
-                files[fieldname] = fileArray[0].path.replace(/\\/g, '/');
-            }
+            savedFiles = saveFiles(req.files);
         }
 
-        const result = await contactService.create(user, request, files);
-
+        const result = await contactService.create(user, request, savedFiles);
         res.status(200).json({ data: result });
     } catch (e) {
-        Object.values(files).forEach(filePath => {
-            if (fs.existsSync(filePath)) {
-                fs.unlinkSync(filePath);
-            }
-        });
+        deleteFiles(savedFiles);
         next(e);
     }
 };
@@ -32,16 +25,14 @@ const get = async (req, res, next) => {
         const contactId = req.params.contactId;
         const result = await contactService.get(user, contactId);
 
-        res.status(200).json({
-            data: result
-        })
+        res.status(200).json({ data: result });
     } catch (e) {
         next(e);
     }
-}
+};
 
 const update = async (req, res, next) => {
-    let files = {};
+    let savedFiles = [];
     try {
         const user = req.user;
         const contactId = req.params.contactId;
@@ -49,19 +40,13 @@ const update = async (req, res, next) => {
         request.id = contactId;
 
         if (req.files) {
-            for (const [fieldname, fileArray] of Object.entries(req.files)) {
-                files[fieldname] = fileArray[0].path.replace(/\\/g, '/');
-            }
+            savedFiles = saveFiles(req.files);
         }
 
-        const result = await contactService.update(user, request, files);
+        const result = await contactService.update(user, request, savedFiles);
         res.status(200).json({ data: result });
     } catch (e) {
-        Object.values(files).forEach(filePath => {
-            if (fs.existsSync(filePath)) {
-                fs.unlinkSync(filePath);
-            }
-        });
+        deleteFiles(savedFiles);
         next(e);
     }
 };
@@ -72,13 +57,11 @@ const remove = async (req, res, next) => {
         const contactId = req.params.contactId;
 
         await contactService.remove(user, contactId);
-        res.status(200).json({
-            data: "OK"
-        })
+        res.status(200).json({ data: "OK" });
     } catch (e) {
         next(e);
     }
-}
+};
 
 const search = async (req, res, next) => {
     try {
@@ -99,7 +82,7 @@ const search = async (req, res, next) => {
     } catch (e) {
         next(e);
     }
-}
+};
 
 export default {
     create,
@@ -107,4 +90,4 @@ export default {
     update,
     remove,
     search
-}
+};

@@ -1,49 +1,86 @@
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { v4 as uuidv4 } from "uuid";
 import { ResponseError } from "../error/response-error.js";
+import { v4 as uuidv4 } from "uuid";
 
-// Configuration object for different types of uploads
 const uploadConfigs = {
     photo: {
         directory: 'public/uploads/photos',
-        maxSize: 1 * 1024 * 1024,
+        maxSize: 2 * 1024 * 1024,
         allowedExtensions: /jpg|jpeg|png/
     },
     certificate: {
         directory: 'public/uploads/certificates',
-        maxSize: 2 * 1024 * 1024,
-        allowedExtensions: /pdf/
-    },
-    location: {
-        directory: 'public/uploads/locations',
         maxSize: 1 * 1024 * 1024,
-        allowedExtensions: /jpg|jpeg|png/
+        allowedExtensions: /pdf/
     }
 };
 
-// Ensure directories exist
-Object.values(uploadConfigs).forEach(config => {
-    if (!fs.existsSync(config.directory)) {
-        fs.mkdirSync(config.directory, { recursive: true });
+const ensureDirectoryExistence = (filePath) => {
+    const dirname = path.dirname(filePath);
+    if (!fs.existsSync(dirname)) {
+        fs.mkdirSync(dirname, { recursive: true });
     }
-});
+};
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const config = uploadConfigs[file.fieldname];
-        if (config) {
-            cb(null, config.directory);
-        } else {
-            cb(new ResponseError(400, 'Invalid field name'), false);
-        }
-    },
-    filename: (req, file, cb) => {
-        const uniqueName = uuidv4();
-        cb(null, uniqueName + path.extname(file.originalname));
+const validateFiles = (files) => {
+    let validationErrors = [];
+    let validFiles = [];
+
+    for (const [fieldname, fileArray] of Object.entries(files)) {
+        fileArray.forEach(file => {
+            const config = uploadConfigs[fieldname];
+            if (config) {
+                if (file.size > config.maxSize) {
+                    validationErrors.push(`File size for ${fieldname} exceeds the limit.`);
+                }
+
+                const extname = config.allowedExtensions.test(path.extname(file.originalname).toLowerCase());
+                const mimetype = config.allowedExtensions.test(file.mimetype);
+                if (!extname || !mimetype) {
+                    validationErrors.push(`Invalid file type for ${fieldname}. Allowed types are ${config.allowedExtensions}.`);
+                } else {
+                    validFiles.push({ fieldname, file });
+                }
+            } else {
+                validationErrors.push(`Invalid field name: ${fieldname}`);
+            }
+        });
     }
-});
+
+    if (validationErrors.length > 0) {
+        throw new ResponseError(400, validationErrors.join(' '));
+    }
+
+    return validFiles;
+};
+
+const saveFiles = (files) => {
+    let savedFiles = [];
+    const validFiles = validateFiles(files);
+
+    validFiles.forEach(({ fieldname, file }) => {
+        const config = uploadConfigs[fieldname];
+        const uniqueName = uuidv4() + path.extname(file.originalname);
+        const savePath = path.join(config.directory, uniqueName);
+        ensureDirectoryExistence(savePath);
+        fs.writeFileSync(savePath, file.buffer);
+        savedFiles.push({ fieldname, path: path.posix.normalize(savePath.replace(/\\/g, '/')) });
+    });
+
+    return savedFiles;
+};
+
+const deleteFiles = (files) => {
+    files.forEach(file => {
+        if (fs.existsSync(file.path)) {
+            fs.unlinkSync(file.path);
+        }
+    });
+};
+
+const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
     const config = uploadConfigs[file.fieldname];
@@ -61,16 +98,14 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
-// Export a function to create the middleware with specific fields
 export const multerMiddleware = (fields) => {
     return multer({
         storage: storage,
         fileFilter: fileFilter,
-        limits: {
-            fileSize: fields.reduce((maxSize, field) => {
-                const config = uploadConfigs[field.name];
-                return config ? Math.min(maxSize, config.maxSize) : maxSize;
-            }, Infinity)
-        }
     }).fields(fields);
+};
+
+export {
+    saveFiles,
+    deleteFiles
 };
