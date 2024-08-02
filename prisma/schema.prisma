@@ -32,15 +32,24 @@ model Contact {
 }
 
 model Address {
-  id          Int     @id @default(autoincrement())
-  street      String? @db.VarChar(255)
-  city        String? @db.VarChar(100)
-  province    String? @db.VarChar(100)
-  country     String  @db.VarChar(100)
-  postal_code String  @db.VarChar(10)
-  location    String? @db.VarChar(200)
+  id          Int               @id @default(autoincrement())
+  street      String?           @db.VarChar(255)
+  city        String?           @db.VarChar(100)
+  province    String?           @db.VarChar(100)
+  country     String            @db.VarChar(100)
+  postal_code String            @db.VarChar(10)
+  locations   AddressLocation[]
   contact_id  Int
-  contact     Contact @relation(fields: [contact_id], references: [id])
+  contact     Contact           @relation(fields: [contact_id], references: [id])
 
   @@map("addresses")
+}
+
+model AddressLocation {
+  id         Int     @id @default(autoincrement())
+  url        String  @db.VarChar(255)
+  address_id Int
+  address    Address @relation(fields: [address_id], references: [id])
+
+  @@map("address_locations")
 }
