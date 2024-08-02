@@ -30,19 +30,16 @@ const create = async (user, contactId, request, files) => {
     const address = validate(createAddressValidation, request);
     address.contact_id = contactId;
 
-    address.location = files.find(file => file.fieldname === 'location')?.path || null;
-
     try {
         const newAddress = await prismaClient.address.create({
-            data: address,
-            select: {
-                id: true,
-                street: true,
-                city: true,
-                province: true,
-                country: true,
-                postal_code: true,
-                location: true
+            data: {
+                ...address,
+                locations: {
+                    create: files.map(file => ({ url: file.path }))
+                }
+            },
+            include: {
+                locations: true
             }
         });
 
@@ -50,7 +47,6 @@ const create = async (user, contactId, request, files) => {
     } catch (error) {
         throw error;
     }
-
 };
 
 const get = async (user, contactId, addressId) => {
@@ -62,13 +58,8 @@ const get = async (user, contactId, addressId) => {
             contact_id: contactId,
             id: addressId
         },
-        select: {
-            id: true,
-            street: true,
-            city: true,
-            province: true,
-            country: true,
-            postal_code: true
+        include: {
+            locations: true
         }
     });
 
@@ -83,22 +74,12 @@ const update = async (user, contactId, request, files) => {
     contactId = await checkContactMustExists(user, contactId);
     const address = validate(updateAddressValidation, request);
 
-    const updateFile = (oldFile, newFile) => {
-        if (newFile) {
-            if (oldFile && fs.existsSync(oldFile)) {
-                fs.unlinkSync(oldFile);
-            }
-            return newFile;
-        }
-        return oldFile;
-    };
-
     const oldAddress = await prismaClient.address.findFirst({
         where: {
             id: address.id
         },
-        select: {
-            location: true
+        include: {
+            locations: true
         }
     });
 
@@ -106,17 +87,12 @@ const update = async (user, contactId, request, files) => {
         throw new ResponseError(404, "Address is not found");
     }
 
-    address.location = updateFile(oldAddress.location, files.location);
-
-    const totalAddressInDatabase = await prismaClient.address.count({
-        where: {
-            contact_id: contactId,
-            id: address.id
-        }
-    });
-
-    if (totalAddressInDatabase !== 1) {
-        throw new ResponseError(404, "address is not found");
+    if (files.length > 0) {
+        oldAddress.locations.forEach(location => {
+            if (fs.existsSync(location.url)) {
+                fs.unlinkSync(location.url);
+            }
+        });
     }
 
     return prismaClient.address.update({
@@ -129,16 +105,13 @@ const update = async (user, contactId, request, files) => {
             province: address.province,
             country: address.country,
             postal_code: address.postal_code,
-            location: address.location
+            locations: files.length > 0 ? {
+                deleteMany: {},
+                create: files.map(file => ({ url: file.path }))
+            } : undefined
         },
-        select: {
-            id: true,
-            street: true,
-            city: true,
-            province: true,
-            country: true,
-            postal_code: true,
-            location: true
+        include: {
+            locations: true
         }
     });
 };
@@ -158,6 +131,21 @@ const remove = async (user, contactId, addressId) => {
         throw new ResponseError(404, "address is not found");
     }
 
+    const address = await prismaClient.address.findFirst({
+        where: {
+            id: addressId
+        },
+        include: {
+            locations: true
+        }
+    });
+
+    address.locations.forEach(location => {
+        if (fs.existsSync(location.url)) {
+            fs.unlinkSync(location.url);
+        }
+    });
+
     return prismaClient.address.delete({
         where: {
             id: addressId
@@ -172,13 +160,8 @@ const list = async (user, contactId) => {
         where: {
             contact_id: contactId
         },
-        select: {
-            id: true,
-            street: true,
-            city: true,
-            province: true,
-            country: true,
-            postal_code: true
+        include: {
+            locations: true
         }
     });
 };

@@ -37,7 +37,7 @@ const get = async (req, res, next) => {
 };
 
 const update = async (req, res, next) => {
-    let files = {};
+    let savedFiles = [];
     try {
         const user = req.user;
         const contactId = req.params.contactId;
@@ -46,22 +46,16 @@ const update = async (req, res, next) => {
         request.id = addressId;
 
         if (req.files) {
-            for (const [fieldname, fileArray] of Object.entries(req.files)) {
-                files[fieldname] = fileArray[0].path.replace(/\\/g, '/');
-            }
+            savedFiles = saveFiles(req.files);
         }
 
-        const result = await addressService.update(user, contactId, request, files);
+        const result = await addressService.update(user, contactId, request, savedFiles);
 
         res.status(200).json({
             data: result
         });
     } catch (e) {
-        Object.values(files).forEach(filePath => {
-            if (fs.existsSync(filePath)) {
-                fs.unlinkSync(filePath);
-            }
-        });
+        deleteFiles(files);
         next(e);
     }
 };
