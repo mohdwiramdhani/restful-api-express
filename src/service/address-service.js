@@ -1,10 +1,10 @@
-import { prismaClient } from "../application/database.js";
 import { validate } from "../validation/validation.js";
 import { getContactValidation } from "../validation/contact-validation.js";
-import { ResponseError } from "../error/response-error.js";
 import {
     createAddressValidation, getAddressValidation, updateAddressValidation
 } from "../validation/address-validation.js";
+import { prismaClient } from "../application/database.js";
+import { ResponseError } from "../error/response-error.js";
 import fs from "fs";
 
 const checkContactMustExists = async (user, contactId) => {
@@ -30,20 +30,27 @@ const create = async (user, contactId, request, files) => {
     const address = validate(createAddressValidation, request);
     address.contact_id = contactId;
 
-    address.location = files.location || null;
+    address.location = files.find(file => file.fieldname === 'location')?.path || null;
 
-    return prismaClient.address.create({
-        data: address,
-        select: {
-            id: true,
-            street: true,
-            city: true,
-            province: true,
-            country: true,
-            postal_code: true,
-            location: true
-        }
-    });
+    try {
+        const newAddress = await prismaClient.address.create({
+            data: address,
+            select: {
+                id: true,
+                street: true,
+                city: true,
+                province: true,
+                country: true,
+                postal_code: true,
+                location: true
+            }
+        });
+
+        return newAddress;
+    } catch (error) {
+        throw error;
+    }
+
 };
 
 const get = async (user, contactId, addressId) => {

@@ -14,6 +14,11 @@ const uploadConfigs = {
         directory: 'public/uploads/certificates',
         maxSize: 1 * 1024 * 1024,
         allowedExtensions: /pdf/
+    },
+    location: {
+        directory: 'public/uploads/locations',
+        maxSize: 1 * 1024 * 1024,
+        allowedExtensions: /jpg|jpeg|png/
     }
 };
 

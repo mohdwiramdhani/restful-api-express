@@ -32,7 +32,11 @@ userRouter.delete('/api/contacts/:contactId', contactController.remove);
 userRouter.get('/api/contacts', contactController.search);
 
 // Address API
-userRouter.post('/api/contacts/:contactId/addresses', addressController.create
+userRouter.post('/api/contacts/:contactId/addresses',
+    multerMiddleware([
+        { name: 'location', maxCount: 3 }
+    ]),
+    addressController.create
 );
 userRouter.get('/api/contacts/:contactId/addresses/:addressId', addressController.get);
 userRouter.put('/api/contacts/:contactId/addresses/:addressId', addressController.update

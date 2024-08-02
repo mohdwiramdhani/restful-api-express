@@ -1,28 +1,21 @@
 import addressService from "../service/address-service.js";
-import fs from "fs";
+import { saveFiles, deleteFiles } from "../middleware/multer-middleware.js";
 
 const create = async (req, res, next) => {
-    let files = {};
+    let savedFiles = [];
     try {
         const user = req.user;
         const request = req.body;
         const contactId = req.params.contactId;
 
         if (req.files) {
-            for (const [fieldname, fileArray] of Object.entries(req.files)) {
-                files[fieldname] = fileArray[0].path.replace(/\\/g, '/');
-            }
+            savedFiles = saveFiles(req.files);
         }
 
-        const result = await addressService.create(user, contactId, request, files);
-
+        const result = await addressService.create(user, contactId, request, savedFiles);
         res.status(200).json({ data: result });
     } catch (e) {
-        Object.values(files).forEach(filePath => {
-            if (fs.existsSync(filePath)) {
-                fs.unlinkSync(filePath);
-            }
-        });
+        deleteFiles(savedFiles);
         next(e);
     }
 };
