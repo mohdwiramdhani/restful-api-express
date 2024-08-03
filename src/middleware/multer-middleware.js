@@ -6,17 +6,17 @@ import { v4 as uuidv4 } from "uuid";
 
 const uploadConfigs = {
     photo: {
-        directory: 'public/uploads/photos',
+        directory: 'uploads/photos',
         maxSize: 2 * 1024 * 1024,
         allowedExtensions: /jpg|jpeg|png/
     },
     certificate: {
-        directory: 'public/uploads/certificates',
+        directory: 'uploads/certificates',
         maxSize: 1 * 1024 * 1024,
         allowedExtensions: /pdf/
     },
     location: {
-        directory: 'public/uploads/locations',
+        directory: 'uploads/locations',
         maxSize: 1 * 1024 * 1024,
         allowedExtensions: /jpg|jpeg|png/
     }
