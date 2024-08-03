@@ -12,8 +12,8 @@ app.use(helmet());
 app.use(express.json());
 app.use(cors());
 
-app.use('/api/v1', userRouter);
 app.use('/api/v1', publicRouter);
+app.use('/api/v1', userRouter);
 app.use('/api/v1', fileRouter);
 
 app.use(errorMiddleware);
