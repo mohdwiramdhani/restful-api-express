@@ -47,6 +47,7 @@ userRouter.put('/contacts/:contactId/addresses/:addressId',
 );
 userRouter.delete('/contacts/:contactId/addresses/:addressId', addressController.remove);
 userRouter.get('/contacts/:contactId/addresses', addressController.list);
+userRouter.get('/contacts/:contactId/export', addressController.exportToExcel);
 
 export {
     userRouter

@@ -1,5 +1,6 @@
 import addressService from "../service/address-service.js";
 import { saveFiles, deleteFiles } from "../middleware/multer-middleware.js";
+import ExcelJS from 'exceljs';
 
 const create = async (req, res, next) => {
     let savedFiles = [];
@@ -91,10 +92,54 @@ const list = async (req, res, next) => {
     }
 };
 
+const exportToExcel = async (req, res, next) => {
+    try {
+        const user = req.user;
+        const contactId = req.params.contactId;
+
+        const addresses = await addressService.list(user, contactId);
+
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Addresses');
+
+        worksheet.columns = [
+            { header: 'ID', key: 'id', width: 10 },
+            { header: 'Street', key: 'street', width: 30 },
+            { header: 'City', key: 'city', width: 20 },
+            { header: 'Province', key: 'province', width: 20 },
+            { header: 'Country', key: 'country', width: 20 },
+            { header: 'Postal Code', key: 'postal_code', width: 10 }
+        ];
+
+        addresses.forEach(address => {
+            worksheet.addRow({
+                id: address.id,
+                street: address.street,
+                city: address.city,
+                province: address.province,
+                country: address.country,
+                postal_code: address.postal_code
+            });
+        });
+
+        const filename = `contact${contactId}.xlsx`;
+
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+
+        await workbook.xlsx.write(res);
+        res.end();
+    } catch (e) {
+        next(e);
+    }
+};
+
+
 export default {
     create,
     get,
     update,
     remove,
-    list
+    list,
+    exportToExcel
 };
