@@ -6,6 +6,7 @@ import {
 import { prismaClient } from "../application/database.js";
 import { ResponseError } from "../error/response-error.js";
 import fs from "fs";
+import ExcelJS from 'exceljs';
 
 const checkContactMustExists = async (user, contactId) => {
     contactId = validate(getContactValidation, contactId);
@@ -166,10 +167,40 @@ const list = async (user, contactId) => {
     });
 };
 
+const exportToExcel = async (user, contactId) => {
+    const addresses = await list(user, contactId);
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Addresses');
+
+    worksheet.columns = [
+        { header: 'ID', key: 'id', width: 10 },
+        { header: 'Street', key: 'street', width: 30 },
+        { header: 'City', key: 'city', width: 20 },
+        { header: 'Province', key: 'province', width: 20 },
+        { header: 'Country', key: 'country', width: 20 },
+        { header: 'Postal Code', key: 'postal_code', width: 10 }
+    ];
+
+    addresses.forEach(address => {
+        worksheet.addRow({
+            id: address.id,
+            street: address.street,
+            city: address.city,
+            province: address.province,
+            country: address.country,
+            postal_code: address.postal_code
+        });
+    });
+
+    return workbook;
+};
+
 export default {
     create,
     get,
     update,
     remove,
-    list
+    list,
+    exportToExcel
 };
